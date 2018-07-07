@@ -22,6 +22,7 @@ class chip8 {
 
         // Initialization of variables.
         bool init();
+        bool load(const char* fileToLoad);
 
 private:
 
