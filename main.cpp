@@ -1,11 +1,15 @@
 #include <iostream>
 #include "chip8.h"
+#include "logWriter.h"
 
 int main(int argc, char* argv[])
 {
+    logWriter LogWriter("newlogfile.txt");
+
     if(argc != 2)
     {
-        std::cout << "Usage: imit8-chip8 filename.ext" << std::endl;
+        LogWriter.log("Usage: imit8-chip8 filename.ext");
+        std::cout << LogWriter.getOutputFileName() << std::endl;
         exit(1);
     }
 
