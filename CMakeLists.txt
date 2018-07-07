@@ -3,4 +3,4 @@ project(imit8_chip8)
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_executable(imit8_chip8 main.cpp)
+add_executable(imit8_chip8 main.cpp chip8.cpp chip8.h)
