@@ -8,12 +8,12 @@
 
 chip8::chip8()
 {
-    std::cout << "Running..." << std::endl;
+    std::cout << "Creating CHIP-8 CPU..." << std::endl;
     init();
 }
 
 bool chip8::init() {
-    std::cout << "Initializing..." << std::endl;
+    std::cout << "Initializing CPU..." << std::endl;
     for(int i = 0; i < MEMORY_SIZE; ++i)
     {
         memory[i] = 0;
