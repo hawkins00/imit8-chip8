@@ -7,12 +7,12 @@
 
 logWriter::logWriter() {
     std::cout << "logWriter was instantiated without a file name.  Using \"log.txt\"" << std::endl;
-    setOutputFileName("log.txt");
+    setOutputFileName("./log.txt");
 }
 
 logWriter::logWriter(std::string fileToOpen) {
     std::cout << "Using \"" << fileToOpen << "\" as the log file." << std::endl;
-    setOutputFileName(fileToOpen);
+    setOutputFileName("./" + fileToOpen);
 }
 
 const std::string &logWriter::getOutputFileName() const {
