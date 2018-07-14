@@ -33,7 +33,7 @@ class chip8
         unsigned char memory[MEMORY_SIZE];
 
         // Simulates the CPU registers.
-        // Registers named V0 through VE.  16th register ("VF") used as ㅣ"carry flag".
+        // Registers named V0 through VE.  16th register ("VF") used as "carry flag".
         unsigned char registers[NUMBER_OF_REGISTERS];
 
         // "Index" register.
