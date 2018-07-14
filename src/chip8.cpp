@@ -35,10 +35,25 @@ bool chip8::init()
     soundInterruptTimer = 0;
     callStackPointer = 0;
 
+    // TODO:  Load font set.
+    loadFontSet();
     return true;
 }
 
-bool chip8::load(const char* fileToLoad)
+// TODO:  Load game file into memory at 0x200 (decimal 512)
+bool chip8::load(const std::string& fileToLoad)
+{
+    // Helper function.
+    return false;
+}
+
+bool chip8::loadROM(const std::string& filename)
+{
+    // Actual work.
+    return false;
+}
+
+bool loadFontSet()
 {
     return false;
 }

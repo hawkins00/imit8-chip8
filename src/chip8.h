@@ -23,7 +23,7 @@ class chip8
         // Initialization of variables.
         bool init();
 
-        bool load(const char* fileToLoad);
+        bool load(const std::string& fileToLoad);
 
     private:
 
@@ -61,6 +61,10 @@ class chip8
         // The Chip-8 system has a keypad that uses 16 buttons, labeled in HEX (0x0-0xF).
         // This array stores the values of the keys currently being pressed.
         unsigned char keypad[NUMBER_OF_KEYPAD_BUTTONS];
+
+        bool loadFontSet();
+        bool loadROM(const std::string& filename);
+
 };
 
 #endif //IMIT8_CHIP8_CHIP8_H
