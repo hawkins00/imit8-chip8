@@ -8,7 +8,7 @@ int main(int argc, char* argv[])
 
     if (argc != 2)
     {
-        LogWriter.log("Usage: imit8-chip8 filename.ext");
+        LogWriter.log(WARNING, "Usage: imit8-chip8 filename.ext");
         std::cout << LogWriter.getOutputFileName() << std::endl;
         exit(1);
     }

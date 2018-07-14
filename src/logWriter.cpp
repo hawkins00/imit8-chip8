@@ -45,7 +45,7 @@ bool logWriter::closeFile()
     return true;
 }
 
-bool logWriter::writeToFile(std::string stringToWriteToLogfile)
+bool logWriter::writeToFile(std::string level, std::string stringToWriteToLogfile)
 {
     if (outputStream.is_open() && outputStream.good())
     {
@@ -58,8 +58,7 @@ bool logWriter::writeToFile(std::string stringToWriteToLogfile)
     return false;
 }
 
-bool logWriter::log(std::string stringToWrite)
+bool logWriter::log(logLevel::level level, std::string stringToWrite)
 {
-    return writeToFile(stringToWrite);
+    return writeToFile(logLevel::to_string(level), stringToWrite);
 }
-
