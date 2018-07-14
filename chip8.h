@@ -14,7 +14,8 @@
 #define NUMBER_OF_KEYPAD_BUTTONS 16
 
 
-class chip8 {
+class chip8
+{
     public:
 
         // Constructor. (In case you couldn't tell.)
@@ -22,9 +23,10 @@ class chip8 {
 
         // Initialization of variables.
         bool init();
-        bool load(const char* fileToLoad);
 
-private:
+        bool load(const char *fileToLoad);
+
+    private:
 
         // Simulates the system memory (RAM).  This should probably
         // be moved to it's own object at some point for good OOP...

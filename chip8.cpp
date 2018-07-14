@@ -12,18 +12,19 @@ chip8::chip8()
     init();
 }
 
-bool chip8::init() {
+bool chip8::init()
+{
     std::cout << "Initializing CPU..." << std::endl;
-    for(int i = 0; i < MEMORY_SIZE; ++i)
+    for (int i = 0; i < MEMORY_SIZE; ++i)
     {
         memory[i] = 0;
     }
-    for(int i = 0; i < NUMBER_OF_REGISTERS; ++i)
+    for (int i = 0; i < NUMBER_OF_REGISTERS; ++i)
     {
         registers[i] = 0;
         callStack[i] = 0;
     }
-    for(int i = 0; i < SCREEN_HEIGHT * SCREEN_WIDTH; ++i)
+    for (int i = 0; i < SCREEN_HEIGHT * SCREEN_WIDTH; ++i)
     {
         graphicsBuffer[i] = 0;
     }
@@ -37,6 +38,7 @@ bool chip8::init() {
     return true;
 }
 
-bool chip8::load(const char* fileToLoad) {
+bool chip8::load(const char *fileToLoad)
+{
     return false;
 }
