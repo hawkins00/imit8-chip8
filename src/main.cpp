@@ -4,12 +4,14 @@
 
 int main(int argc, char* argv[])
 {
-    logWriter LogWriter("newlogfile.txt");
+    // TODO: Figure out why default constructor does not work.
+    logWriter LogWriter("DEBUG_LOG.txt", logWriter::logLevel::INFO);
 
     if (argc != 2)
     {
-        LogWriter.log(WARNING, "Usage: imit8-chip8 filename.ext");
-        std::cout << LogWriter.getOutputFileName() << std::endl;
+        LogWriter.log(logWriter::logLevel::ERROR, "No input program file provided.  Exiting.");
+        std::cout << "ERROR:  No input program file provided." << std::endl;
+        std::cout << "Usage:  imit8-chip8 filename.ext" << std::endl;
         exit(1);
     }
 

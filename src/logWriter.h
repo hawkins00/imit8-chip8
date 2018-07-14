@@ -9,15 +9,11 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <chrono>
 
 class logWriter
 {
-
     public:
-        logWriter();
-        logWriter(std::string fileToOpen);
-        logWriter::~logWriter();
-
         struct logLevel
         {
             enum level
@@ -43,17 +39,25 @@ class logWriter
             }
         };
 
+        logWriter();
+        logWriter(std::string fileToOpen, logLevel::level level);
+        logWriter::~logWriter();
+
         std::string& logWriter::getOutputFileName();
-        bool log(logLevel::level level, std::string stringToWrite);
+        bool log(logLevel::level levelOfMessage, std::string stringToWrite);
 
     private:
         std::string outputFileName = "";
         std::ofstream outputStream;
+        logLevel::level currentLoggingLevel;
 
         void setOutputFileName(const std::string& outputFileName);
         bool openFile(std::string fileToOpen);
         bool closeFile();
-        bool writeToFile(logLevel::level level, std::string stringToWriteToLogfile);
+        bool writeToFile(std::string levelOfMessage, std::string& stringToWriteToLogfile);
+
+        logLevel::level getCurrentLoggingLevel() const;
+        void setCurrentLoggingLevel(logLevel::level currentLoggingLevel);
 };
 
 #endif //IMIT8_CHIP8_LOGWRITER_H
