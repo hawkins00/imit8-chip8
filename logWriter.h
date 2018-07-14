@@ -10,22 +10,28 @@
 #include <iostream>
 #include <fstream>
 
-class logWriter {
+class logWriter
+{
 
     public:
         logWriter();
+
         logWriter(std::string fileToOpen);
 
         const std::string &getOutputFileName() const;
+
         bool log(std::string stringToWrite);
 
     private:
         std::string outputFileName = "";
         std::ofstream myFile;
 
-    void setOutputFileName(const std::string &outputFileName);
+        void setOutputFileName(const std::string &outputFileName);
+
         bool openFile(std::string fileToOpen);
+
         bool closeFile();
+
         bool writeToFile(std::string stringToWriteToLogfile);
 
 

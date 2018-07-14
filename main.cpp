@@ -2,11 +2,11 @@
 #include "chip8.h"
 #include "logWriter.h"
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
     logWriter LogWriter("newlogfile.txt");
 
-    if(argc != 2)
+    if (argc != 2)
     {
         LogWriter.log("Usage: imit8-chip8 filename.ext");
         std::cout << LogWriter.getOutputFileName() << std::endl;
@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
     cpu0.load(argv[1]);
     bool isRunning = true;
 
-    while(isRunning)
+    while (isRunning)
     {
         // TODO: run one cycle
         // TODO: update screen
