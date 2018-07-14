@@ -38,7 +38,7 @@ bool chip8::init()
     return true;
 }
 
-bool chip8::load(const char *fileToLoad)
+bool chip8::load(const char* fileToLoad)
 {
     return false;
 }

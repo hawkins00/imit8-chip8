@@ -15,27 +15,21 @@ class logWriter
 
     public:
         logWriter();
-
         logWriter(std::string fileToOpen);
+        logWriter::~logWriter();
 
-        const std::string &getOutputFileName() const;
+        std::string& logWriter::getOutputFileName();
 
         bool log(std::string stringToWrite);
 
     private:
         std::string outputFileName = "";
-        std::ofstream myFile;
+        std::ofstream outputStream;
 
-        void setOutputFileName(const std::string &outputFileName);
-
+        void setOutputFileName(const std::string& outputFileName);
         bool openFile(std::string fileToOpen);
-
         bool closeFile();
-
         bool writeToFile(std::string stringToWriteToLogfile);
-
-
 };
-
 
 #endif //IMIT8_CHIP8_LOGWRITER_H

@@ -2,7 +2,7 @@
 #include "chip8.h"
 #include "logWriter.h"
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     logWriter LogWriter("newlogfile.txt");
 

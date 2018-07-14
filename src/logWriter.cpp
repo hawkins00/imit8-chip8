@@ -8,50 +8,58 @@
 logWriter::logWriter()
 {
     std::cout << "logWriter was instantiated without a file name.  Using \"log.txt\"" << std::endl;
-    setOutputFileName("./log.txt");
+    logWriter("log.txt");
 }
 
 logWriter::logWriter(std::string fileToOpen)
 {
     std::cout << "Using \"" << fileToOpen << "\" as the log file." << std::endl;
     setOutputFileName("./" + fileToOpen);
+    openFile(outputFileName);
 }
 
-const std::string &logWriter::getOutputFileName() const
+logWriter::~logWriter()
+{
+    closeFile();
+}
+
+std::string& logWriter::getOutputFileName()
 {
     return outputFileName;
 }
 
-void logWriter::setOutputFileName(const std::string &outputFileName)
+void logWriter::setOutputFileName(const std::string& outputFileName)
 {
     logWriter::outputFileName = outputFileName;
 }
 
 bool logWriter::openFile(std::string fileToOpen)
 {
-    myFile.open(fileToOpen, std::ios_base::app);
-    return true;
+    outputStream.open(fileToOpen, std::ios_base::app);
+    return outputStream.good();
 }
 
 bool logWriter::closeFile()
 {
-    myFile.close();
+    outputStream.close();
     return true;
 }
 
 bool logWriter::writeToFile(std::string stringToWriteToLogfile)
 {
-    if (myFile.is_open() && myFile.good())
+    if (outputStream.is_open() && outputStream.good())
     {
-        myFile.write(stringToWriteToLogfile.c_str(), stringToWriteToLogfile.length());
+        outputStream.write(stringToWriteToLogfile.c_str(), stringToWriteToLogfile.length());
+        outputStream.write("\n", 1);
         return true;
     }
+
+    std::cout << "ERROR:  Writing to file failed, outputStream is not open for writing." << std::endl;
     return false;
 }
 
 bool logWriter::log(std::string stringToWrite)
 {
-    writeToFile(stringToWrite);
-    return false;
+    return writeToFile(stringToWrite);
 }
 
