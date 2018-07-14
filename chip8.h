@@ -13,7 +13,6 @@
 #define STACK_DEPTH 16
 #define NUMBER_OF_KEYPAD_BUTTONS 16
 
-
 class chip8
 {
     public:
@@ -38,6 +37,7 @@ class chip8
 
         // "Index" register.
         unsigned short index;
+
         // Program counter.
         unsigned short pcounter;
 
@@ -53,18 +53,14 @@ class chip8
         unsigned char delayInterruptTimer;
         unsigned char soundInterruptTimer;
 
-
         // The Chip-8 system does not have a stack, but we need one to keep track of where to return to
         // when a function call is made.
         unsigned short callStack[STACK_DEPTH];
         unsigned short callStackPointer;
 
-
         // The Chip-8 system has a keypad that uses 16 buttons, labeled in HEX (0x0-0xF).
         // This array stores the values of the keys currently being pressed.
         unsigned char keypad[NUMBER_OF_KEYPAD_BUTTONS];
-
 };
-
 
 #endif //IMIT8_CHIP8_CHIP8_H
