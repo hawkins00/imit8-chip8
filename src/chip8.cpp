@@ -3,7 +3,6 @@
  * Implementation of the Chip-8 CPU Core.
  */
 
-#include <iostream>
 #include "chip8.h"
 
 chip8::chip8()
@@ -53,7 +52,7 @@ bool chip8::loadROM(const std::string& filename)
     return false;
 }
 
-bool loadFontSet()
+bool chip8::loadFontSet()
 {
     return false;
 }

@@ -41,9 +41,9 @@ class logWriter
 
         logWriter();
         logWriter(std::string fileToOpen, logLevel::level level);
-        logWriter::~logWriter();
+        ~logWriter();
 
-        std::string& logWriter::getOutputFileName();
+        std::string& getOutputFileName();
         bool log(logLevel::level levelOfMessage, std::string stringToWrite);
 
     private:
