@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
 
     // TODO: write log statements for stuff that happens
     chip8 cpu0;
-    cpu0.load(argv[1]);
+    cpu0.loadFile(argv[1]);
     bool isRunning = true;
 
     while (isRunning)

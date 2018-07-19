@@ -14,36 +14,50 @@ chip8::chip8()
 bool chip8::init()
 {
     std::cout << "Initializing CPU..." << std::endl;
-    for (int i = 0; i < MEMORY_SIZE; ++i)
-    {
-        memory[i] = 0;
-    }
+
     for (int i = 0; i < NUMBER_OF_REGISTERS; ++i)
     {
         registers[i] = 0;
+    }
+
+    for (int i = 0; i < STACK_DEPTH; ++i)
+    {
         callStack[i] = 0;
     }
+
     for (int i = 0; i < SCREEN_HEIGHT * SCREEN_WIDTH; ++i)
     {
         graphicsBuffer[i] = 0;
     }
+
+    loadFontSet(); // load font to memory, then zero the rest
+    for (int i = FONT_SIZE; i < MEMORY_SIZE; ++i)
+    {
+        memory[i] = 0;
+    }
+
     index = 0;
-    pcounter = 0;
+    progCounter = CODE_START;
     opcode = 0;
     delayInterruptTimer = 0;
     soundInterruptTimer = 0;
     callStackPointer = 0;
 
-    // TODO:  Load font set.
-    loadFontSet();
     return true;
 }
 
+
 // TODO:  Load game file into memory at 0x200 (decimal 512)
-bool chip8::load(const std::string& fileToLoad)
+bool chip8::loadFile(const std::string& fileToLoad)
 {
     // Helper function.
     return false;
+}
+
+bool chip8::loadFontSet()
+{
+    std::copy_n(font, FONT_SIZE, memory);
+    return true;
 }
 
 bool chip8::loadROM(const std::string& filename)
@@ -52,7 +66,4 @@ bool chip8::loadROM(const std::string& filename)
     return false;
 }
 
-bool chip8::loadFontSet()
-{
-    return false;
-}
+

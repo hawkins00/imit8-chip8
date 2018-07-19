@@ -6,6 +6,7 @@
 #ifndef IMIT8_CHIP8_CHIP8_H
 #define IMIT8_CHIP8_CHIP8_H
 
+#include <algorithm>
 #include <iostream>
 
 #define SCREEN_HEIGHT 32
@@ -14,6 +15,9 @@
 #define NUMBER_OF_REGISTERS 16
 #define STACK_DEPTH 16
 #define NUMBER_OF_KEYPAD_BUTTONS 16
+#define FONT_SIZE 0x50
+#define CODE_START 0x200
+
 
 class chip8
 {
@@ -25,7 +29,7 @@ class chip8
         // Initialization of variables.
         bool init();
 
-        bool load(const std::string& fileToLoad);
+        bool loadFile(const std::string& fileToLoad);
 
     private:
 
@@ -41,13 +45,23 @@ class chip8
         uint_fast16_t index;
 
         // Program counter.
-        uint_fast16_t pcounter;
+        uint_fast16_t progCounter;
 
         // Used to store the current opcode to be processed.
         uint_fast16_t opcode;
 
         // Used to simulate VRAM, this is the buffer that gets written to the display.
         uint_fast8_t graphicsBuffer[SCREEN_HEIGHT * SCREEN_WIDTH];
+
+        // Font to store in memory (0-F)
+        uint_fast8_t font[FONT_SIZE] = {0xF0, 0x90, 0x90, 0x90, 0xF0, 0x20, 0x60, 0x20, 0x20, 0x70,
+                                        0xF0, 0x10, 0xF0, 0x80, 0xF0, 0xF0, 0x10, 0xF0, 0x10, 0xF0,
+                                        0x90, 0x90, 0xF0, 0x10, 0x10, 0xF0, 0x80, 0xF0, 0x10, 0xF0,
+                                        0xF0, 0x80, 0xF0, 0x90, 0xF0, 0xF0, 0x10, 0x20, 0x40, 0x40,
+                                        0xF0, 0x90, 0xF0, 0x90, 0xF0, 0xF0, 0x90, 0xF0, 0x10, 0xF0,
+                                        0xF0, 0x90, 0xF0, 0x90, 0x90, 0xE0, 0x90, 0xE0, 0x90, 0xE0,
+                                        0xF0, 0x80, 0x80, 0x80, 0xF0, 0xE0, 0x90, 0x90, 0x90, 0xE0,
+                                        0xF0, 0x80, 0xF0, 0x80, 0xF0, 0xF0, 0x80, 0xF0, 0x80, 0x80};
 
         // "Interrupt timers" that the CHIP-8 uses for delays and sound purposes.
         // These timers go off every 60Hz.  They are set to some value > 0, and count down to zero.
