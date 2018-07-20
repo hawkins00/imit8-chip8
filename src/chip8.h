@@ -7,7 +7,10 @@
 #define IMIT8_CHIP8_CHIP8_H
 
 #include <algorithm>
+#include <fstream>
 #include <iostream>
+#include <stack>
+#include <vector>
 
 #define SCREEN_HEIGHT 32
 #define SCREEN_WIDTH 64
@@ -71,16 +74,17 @@ class chip8
 
         // The Chip-8 system does not have a stack, but we need one to keep track of where to return to
         // when a function call is made.
-        uint_fast16_t callStack[STACK_DEPTH];
-        uint_fast16_t callStackPointer;
+        std::stack<uint_fast16_t, std::vector<uint_fast16_t>> callStack;
 
         // The Chip-8 system has a keypad that uses 16 buttons, labeled in HEX (0x0-0xF).
         // This array stores the values of the keys currently being pressed.
         uint_fast8_t keypad[NUMBER_OF_KEYPAD_BUTTONS];
 
+        // Load font into memory
         bool loadFontSet();
-        bool loadROM(const std::string& filename);
 
+        // Load ROM file into memory
+        bool loadROM(const std::string& filename);
 };
 
 #endif //IMIT8_CHIP8_CHIP8_H

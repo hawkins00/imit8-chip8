@@ -20,14 +20,14 @@ bool chip8::init()
         registers[i] = 0;
     }
 
-    for (int i = 0; i < STACK_DEPTH; ++i)
-    {
-        callStack[i] = 0;
-    }
-
     for (int i = 0; i < SCREEN_HEIGHT * SCREEN_WIDTH; ++i)
     {
         graphicsBuffer[i] = 0;
+    }
+
+    while (!callStack.empty())
+    {
+        callStack.pop();
     }
 
     loadFontSet(); // load font to memory, then zero the rest
@@ -41,7 +41,6 @@ bool chip8::init()
     opcode = 0;
     delayInterruptTimer = 0;
     soundInterruptTimer = 0;
-    callStackPointer = 0;
 
     return true;
 }
@@ -54,6 +53,7 @@ bool chip8::loadFile(const std::string& fileToLoad)
     return false;
 }
 
+// Copy font to first 80 memory locations
 bool chip8::loadFontSet()
 {
     std::copy_n(font, FONT_SIZE, memory);
@@ -65,5 +65,3 @@ bool chip8::loadROM(const std::string& filename)
     // Actual work.
     return false;
 }
-
-
