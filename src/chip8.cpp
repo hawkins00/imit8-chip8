@@ -36,21 +36,28 @@ bool chip8::init()
         memory[i] = 0;
     }
 
-    index = 0;
-    progCounter = CODE_START;
-    opcode = 0;
     delayInterruptTimer = 0;
+    index = 0;
+    opcode = 0;
+    progCounter = CODE_START;
+    romBytes = 0;
     soundInterruptTimer = 0;
 
+
+    std::cout << "Done initializing CPU..." << std::endl;
     return true;
 }
 
 
-// TODO:  Load game file into memory at 0x200 (decimal 512)
+// Load game file into memory at 0x200 (decimal 512)
 bool chip8::loadFile(const std::string& fileToLoad)
 {
-    // Helper function.
-    return false;
+    std::cout << "Reading CHIP-8 ROM " << fileToLoad << "..." << std::endl;
+    std::ifstream fin(fileToLoad, std::ios::in);
+    loadROM(&fin);
+    fin.close();
+    std::cout << "Done reading CHIP-8 ROM..." << std::endl;
+    return true;
 }
 
 // Copy font to first 80 memory locations
@@ -60,8 +67,30 @@ bool chip8::loadFontSet()
     return true;
 }
 
-bool chip8::loadROM(const std::string& filename)
+bool chip8::loadROM(std::ifstream * fin)
 {
-    // Actual work.
-    return false;
+    char op;
+    int i = CODE_START;
+    for (; i < MEMORY_SIZE && !fin->eof(); ++i)
+    {
+        fin->read(&op, 1);
+        memory[i] = (uint_fast8_t)op;
+    }
+    if (i >= MEMORY_SIZE && !fin->eof())
+    {
+        return false;
+    }
+
+    romBytes = (uint_fast16_t)(i - CODE_START - 1);
+
+    /*
+    for (int j = CODE_START; j < MEMORY_SIZE; j += 2)
+    {
+        std::cout << std::uppercase << std::hex << std::setw(2) << std::setfill('0') << static_cast<unsigned short>(memory[j]) << std::setw(2) << static_cast<unsigned short>(memory[j+1]) << " ";
+    }
+    std::cout << "Done printing CHIP-8 ROM..." << std::endl;
+    std::cout << std::dec << "Code size: " << romBytes << std::endl
+    */
+
+    return true;
 }

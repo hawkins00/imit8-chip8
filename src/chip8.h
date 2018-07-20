@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <stack>
 #include <vector>
@@ -80,11 +81,14 @@ class chip8
         // This array stores the values of the keys currently being pressed.
         uint_fast8_t keypad[NUMBER_OF_KEYPAD_BUTTONS];
 
+        // size of loaded ROM in bytes
+        uint_fast16_t romBytes;
+
         // Load font into memory
         bool loadFontSet();
 
         // Load ROM file into memory
-        bool loadROM(const std::string& filename);
+        bool loadROM(std::ifstream * fin);
 };
 
 #endif //IMIT8_CHIP8_CHIP8_H
