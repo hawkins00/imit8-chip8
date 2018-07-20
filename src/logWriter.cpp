@@ -5,7 +5,8 @@
 
 #include "logWriter.h"
 
-logWriter::logWriter()
+logWriter::
+logWriter()
 {
     std::cout
             << "logWriter was instantiated without a file name.  Using \"log.txt\" and ERROR as the default logging level."
@@ -13,7 +14,8 @@ logWriter::logWriter()
     logWriter("log.txt", logLevel::level::ERROR);
 }
 
-logWriter::logWriter(std::string fileToOpen, logLevel::level level)
+logWriter::
+logWriter(std::string fileToOpen, logLevel::level level)
 {
     std::cout << "Using \"" << fileToOpen << "\" as the log file." << std::endl;
     setOutputFileName("./" + fileToOpen);
@@ -21,34 +23,40 @@ logWriter::logWriter(std::string fileToOpen, logLevel::level level)
     openFile(outputFileName);
 }
 
-logWriter::~logWriter()
+logWriter::
+~logWriter()
 {
     closeFile();
 }
 
-std::string& logWriter::getOutputFileName()
+std::string& logWriter::
+getOutputFileName()
 {
     return outputFileName;
 }
 
-void logWriter::setOutputFileName(const std::string& outputFileName)
+void logWriter::
+setOutputFileName(const std::string& outputFileName)
 {
     logWriter::outputFileName = outputFileName;
 }
 
-bool logWriter::openFile(std::string fileToOpen)
+bool logWriter::
+openFile(std::string fileToOpen)
 {
     outputStream.open(fileToOpen, std::ios_base::app);
     return outputStream.good();
 }
 
-bool logWriter::closeFile()
+bool logWriter::
+closeFile()
 {
     outputStream.close();
     return true;
 }
 
-bool logWriter::writeToFile(std::string levelOfMessage, std::string& stringToWriteToLogfile)
+bool logWriter::
+writeToFile(std::string levelOfMessage, std::string& stringToWriteToLogfile)
 {
     if (outputStream.is_open() && outputStream.good())
     {
@@ -66,7 +74,8 @@ bool logWriter::writeToFile(std::string levelOfMessage, std::string& stringToWri
     return false;
 }
 
-bool logWriter::log(logLevel::level levelOfMessage, std::string stringToWrite)
+bool logWriter::
+log(logLevel::level levelOfMessage, std::string stringToWrite)
 {
     if (levelOfMessage <= getCurrentLoggingLevel())
     {
@@ -75,12 +84,14 @@ bool logWriter::log(logLevel::level levelOfMessage, std::string stringToWrite)
     return false;
 }
 
-logWriter::logLevel::level logWriter::getCurrentLoggingLevel() const
+logWriter::logLevel::level logWriter::
+getCurrentLoggingLevel() const
 {
     return currentLoggingLevel;
 }
 
-void logWriter::setCurrentLoggingLevel(logWriter::logLevel::level currentLoggingLevel)
+void logWriter::
+setCurrentLoggingLevel(logWriter::logLevel::level currentLoggingLevel)
 {
     logWriter::currentLoggingLevel = currentLoggingLevel;
 }

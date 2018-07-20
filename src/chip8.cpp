@@ -5,13 +5,15 @@
 
 #include "chip8.h"
 
-chip8::chip8()
+chip8::
+chip8()
 {
     std::cout << "Creating CHIP-8 CPU..." << std::endl;
     init();
 }
 
-bool chip8::init()
+bool chip8::
+init()
 {
     std::cout << "Initializing CPU..." << std::endl;
 
@@ -50,40 +52,51 @@ bool chip8::init()
 
 
 // Load game file into memory at 0x200 (decimal 512)
-bool chip8::loadFile(const std::string& fileToLoad)
+bool chip8::
+loadFile(const std::string& fileToLoad)
 {
-    std::cout << "Reading CHIP-8 ROM " << fileToLoad << "..." << std::endl;
+    std::cout << "Reading CHIP-8 ROM '" << fileToLoad << "'..." << std::endl;
     std::ifstream fin(fileToLoad, std::ios::in);
-    loadROM(&fin);
+    bool isRomLoaded = loadROM(&fin);
     fin.close();
-    std::cout << "Done reading CHIP-8 ROM..." << std::endl;
-    return true;
+    if (isRomLoaded)
+    {
+        std::cout << "Done reading CHIP-8 ROM..." << std::endl;
+        return true;
+    }
+    else
+    {
+        std::cout << "CHIP-8 ROM was not loaded..." << std::endl;
+        return false;
+    }
 }
 
 // Copy font to first 80 memory locations
-bool chip8::loadFontSet()
+bool chip8::
+loadFontSet()
 {
     std::copy_n(font, FONT_SIZE, memory);
     return true;
 }
 
-bool chip8::loadROM(std::ifstream * fin)
+bool chip8::
+loadROM(std::ifstream* fin)
 {
     char op;
     int i = CODE_START;
     for (; i < MEMORY_SIZE && !fin->eof(); ++i)
     {
         fin->read(&op, 1);
-        memory[i] = (uint_fast8_t)op;
+        memory[i] = static_cast<uint_fast8_t>(op);
     }
-    if ((i >= MEMORY_SIZE && !fin->eof()) || !(i % 2))
-    {
-        return false;
-    }
+    romBytes = static_cast<uint_fast16_t>(i - CODE_START - 1);
 
-    romBytes = (uint_fast16_t)(i - CODE_START - 1);
+    // If we filled the memory, but we're not at the end of the file, then the ROM is too big.
+    // If the length of the ROM file is not even, it's an error (all instructions are two bytes).
+    return !((i >= MEMORY_SIZE && !fin->eof()) || romBytes % 2);
 
     /*
+    // Just some testing output
     for (int j = CODE_START; j < MEMORY_SIZE; j += 2)
     {
         std::cout << std::uppercase << std::hex << std::setw(2) << std::setfill('0') << static_cast<unsigned short>(memory[j]) << std::setw(2) << static_cast<unsigned short>(memory[j+1]) << " ";
@@ -92,5 +105,4 @@ bool chip8::loadROM(std::ifstream * fin)
     std::cout << std::dec << "Code size: " << romBytes << std::endl
     */
 
-    return true;
 }
