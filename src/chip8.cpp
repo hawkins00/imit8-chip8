@@ -76,7 +76,7 @@ bool chip8::loadROM(std::ifstream * fin)
         fin->read(&op, 1);
         memory[i] = (uint_fast8_t)op;
     }
-    if (i >= MEMORY_SIZE && !fin->eof())
+    if ((i >= MEMORY_SIZE && !fin->eof()) || !(i % 2))
     {
         return false;
     }
