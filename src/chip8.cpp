@@ -40,7 +40,7 @@ init()
 
     delayInterruptTimer = 0;
     index = 0;
-    opcode = 0;
+    opCode = 0;
     progCounter = CODE_START;
     romBytes = 0;
     soundInterruptTimer = 0;
@@ -61,7 +61,7 @@ loadFile(const std::string& fileToLoad)
     fin.close();
     if (isRomLoaded)
     {
-        std::cout << "Done reading CHIP-8 ROM..." << std::endl;
+        std::cout << "Done reading CHIP-8 ROM (" << romBytes << " bytes)..." << std::endl;
         return true;
     }
     else
@@ -92,8 +92,8 @@ loadROM(std::ifstream* fin)
     romBytes = static_cast<uint_fast16_t>(i - CODE_START - 1);
 
     // If we filled the memory, but we're not at the end of the file, then the ROM is too big.
-    // If the length of the ROM file is not even, it's an error (all instructions are two bytes).
-    return !((i >= MEMORY_SIZE && !fin->eof()) || romBytes % 2);
+    // If the length of the ROM file is not even (or 0), it's an error (all instructions are two bytes).
+    return !((i >= MEMORY_SIZE && !fin->eof()) || romBytes % 2 || romBytes == 0);
 
     /*
     // Just some testing output
@@ -104,5 +104,85 @@ loadROM(std::ifstream* fin)
     std::cout << "Done printing CHIP-8 ROM..." << std::endl;
     std::cout << std::dec << "Code size: " << romBytes << std::endl
     */
+}
 
+// Run the next cycle
+bool chip8::
+nextCycle()
+{
+    return fetch() && decode() && execute();
+}
+
+// Fetch the next opCode
+bool chip8::
+fetch()
+{
+    if (progCounter >= CODE_START + romBytes || progCounter < CODE_START) {
+        return false;
+    }
+    opCode = static_cast<uint_fast16_t>(memory[progCounter] << 8 | memory[progCounter + 1]);
+    return true;
+}
+
+// TODO: A whole bunch o' opCodes
+// TODO: Maybe combine into decodeAndExecute()
+// Decode the fetched opCode
+bool chip8::
+decode()
+{
+    // TODO: Change ifs to case or something even grander?
+    if ((opCode >> 12) == 0x1)
+    {
+        progCounter = opCode & 0x0FFF;
+        // check segfault (is this necessary?)
+        if (progCounter < CODE_START)
+        {
+            return false;
+        }
+        std::cout << "GOTO: " << std::hex << progCounter << std::endl;
+    }
+    // 2XXX (subroutine call)
+    else if ((opCode >> 12) == 0x2)
+    {
+        progCounter = opCode & 0x0FFF;
+
+        // stack overflow or segfault
+        if (callStack.size() >= STACK_DEPTH || progCounter < CODE_START)
+        {
+            return false;
+        }
+
+        callStack.push(progCounter);
+        std::cout << "CALL: " << std::hex << progCounter << std::endl;
+    }
+    // FX15 (soundInterruptTimer = register[X])
+    else if ((opCode & 0xF0FF) == 0xF015)
+    {
+        soundInterruptTimer = static_cast<uint_fast8_t>(registers[(opCode >> 8) & 0x0F]);
+        progCounter += 2;
+        //std::cout << std::hex << ((opCode >> 8) & 0x0F) << std::endl;
+        //std::cout << "Sound: " << std::hex << (int)soundInterruptTimer << std::endl;
+    }
+    else
+    {
+        progCounter += 2;
+    }
+
+    std::cout << std::hex << progCounter << std::endl;
+    return true;
+}
+
+// Execute the decoded operation
+bool chip8::execute()
+{
+    if (soundInterruptTimer > 0)
+    {
+        --soundInterruptTimer;
+    }
+    if (delayInterruptTimer > 0)
+    {
+        --delayInterruptTimer;
+    }
+
+    return true;
 }

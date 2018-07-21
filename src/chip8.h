@@ -35,6 +35,8 @@ class chip8
 
         bool loadFile(const std::string& fileToLoad);
 
+        bool nextCycle();
+
     private:
 
         // Simulates the system memory (RAM).  This should probably
@@ -51,8 +53,8 @@ class chip8
         // Program counter.
         uint_fast16_t progCounter;
 
-        // Used to store the current opcode to be processed.
-        uint_fast16_t opcode;
+        // Used to store the current opCode to be processed.
+        uint_fast16_t opCode;
 
         // Used to simulate VRAM, this is the buffer that gets written to the display.
         uint_fast8_t graphicsBuffer[SCREEN_HEIGHT * SCREEN_WIDTH];
@@ -89,6 +91,9 @@ class chip8
 
         // Load ROM file into memory
         bool loadROM(std::ifstream * fin);
+        bool fetch();
+        bool decode();
+        bool execute();
 };
 
 #endif //IMIT8_CHIP8_CHIP8_H

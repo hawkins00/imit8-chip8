@@ -17,15 +17,18 @@ int main(int argc, char* argv[])
 
     // TODO: write log statements for stuff that happens
     chip8 cpu0;
-    cpu0.loadFile(argv[1]);
-    bool isRunning = true;
+    if (!cpu0.loadFile(argv[1]))
+    {
+        return 1;
+    }
 
-    while (isRunning)
+    //bool isRunning = true;
+
+    while (cpu0.nextCycle())
     {
         // TODO: run one cycle
         // TODO: update screen
         // TODO: read key state
-        isRunning = false;
     }
 
     return 0;
