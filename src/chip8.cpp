@@ -93,7 +93,7 @@ loadROM(std::ifstream* fin)
 
     // If we filled the memory, but we're not at the end of the file, then the ROM is too big.
     // If the length of the ROM file is not even (or 0), it's an error (all instructions are two bytes).
-    return !((i >= MEMORY_SIZE && !fin->eof()) || romBytes % 2 || romBytes == 0);
+    return !((i >= MEMORY_SIZE && !fin->eof()) || romBytes % 2 || !romBytes);
 
     /*
     // Just some testing output
@@ -117,7 +117,7 @@ nextCycle()
 bool chip8::
 fetch()
 {
-    if (progCounter >= CODE_START + romBytes || progCounter < CODE_START) {
+    if (progCounter >= CODE_START + romBytes || progCounter < CODE_START || progCounter % 2) {
         return false;
     }
     opCode = static_cast<uint_fast16_t>(memory[progCounter] << 8 | memory[progCounter + 1]);
@@ -134,8 +134,8 @@ decode()
     if ((opCode >> 12) == 0x1)
     {
         progCounter = opCode & 0x0FFF;
-        // check segfault (is this necessary?)
-        if (progCounter < CODE_START)
+        // check segfault (is this necessary?) or odd address
+        if (progCounter < CODE_START || progCounter % 2)
         {
             return false;
         }
@@ -146,8 +146,8 @@ decode()
     {
         progCounter = opCode & 0x0FFF;
 
-        // stack overflow or segfault
-        if (callStack.size() >= STACK_DEPTH || progCounter < CODE_START)
+        // stack overflow or segfault or odd address
+        if (callStack.size() >= STACK_DEPTH || progCounter < CODE_START || progCounter % 2)
         {
             return false;
         }
@@ -158,7 +158,7 @@ decode()
     // FX15 (soundInterruptTimer = register[X])
     else if ((opCode & 0xF0FF) == 0xF015)
     {
-        soundInterruptTimer = static_cast<uint_fast8_t>(registers[(opCode >> 8) & 0x0F]);
+        soundInterruptTimer = static_cast<uint_fast8_t>(registers[(opCode >> 8) & 0xF]);
         progCounter += 2;
         //std::cout << std::hex << ((opCode >> 8) & 0x0F) << std::endl;
         //std::cout << "Sound: " << std::hex << (int)soundInterruptTimer << std::endl;
