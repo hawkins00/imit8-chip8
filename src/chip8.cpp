@@ -131,6 +131,7 @@ bool chip8::
 decode()
 {
     // TODO: Change ifs to case or something even grander?
+    // 1XXX (goto)
     if ((opCode >> 12) == 0x1)
     {
         progCounter = opCode & 0x0FFF;
@@ -144,18 +145,18 @@ decode()
     // 2XXX (subroutine call)
     else if ((opCode >> 12) == 0x2)
     {
+        callStack.push(progCounter);
         progCounter = opCode & 0x0FFF;
 
         // stack overflow or segfault or odd address
-        if (callStack.size() >= STACK_DEPTH || progCounter < CODE_START || progCounter % 2)
+        if (callStack.size() > STACK_DEPTH || progCounter < CODE_START || progCounter % 2)
         {
             return false;
         }
 
-        callStack.push(progCounter);
         std::cout << "CALL: " << std::hex << progCounter << std::endl;
     }
-    // FX15 (soundInterruptTimer = register[X])
+    // FX15 (soundInterruptTimer = registers[X])
     else if ((opCode & 0xF0FF) == 0xF015)
     {
         soundInterruptTimer = static_cast<uint_fast8_t>(registers[(opCode >> 8) & 0xF]);
@@ -168,7 +169,7 @@ decode()
         progCounter += 2;
     }
 
-    std::cout << std::hex << progCounter << std::endl;
+    std::cout << "PC: " << std::hex << progCounter << std::endl;
     return true;
 }
 
