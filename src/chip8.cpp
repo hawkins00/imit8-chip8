@@ -278,21 +278,47 @@ decode()
                     std::cout << "0xFR29: index = font sprite address" << std::endl;
                     break;
 
-                // 0xFR33 (set index to address of sprite for character in registers[R])
+                // 0xFR33 (binary-coded decimal of registers[R] stored in index, +1, +2)
                 case 0x33:
-                { // scope limiter ({), so tempNum doesn't cross initialization
-                    uint_fast8_t tempNum = registers[(opCode >> 8) & 0xF];
-                    memory[index] = static_cast<uint_fast8_t>(tempNum / 100);
-                    memory[index + 1] = static_cast<uint_fast8_t>(tempNum / 10 % 10);
-                    memory[index + 2] = static_cast<uint_fast8_t>(tempNum % 10);
-                    progCounter += 2;
-                    std::cout << "0xFR33" << std::endl;
+                    {
+                        uint_fast8_t tempNum = registers[(opCode >> 8) & 0xF];
+                        memory[index] = static_cast<uint_fast8_t>(tempNum / 100);
+                        memory[index + 1] = static_cast<uint_fast8_t>(tempNum / 10 % 10);
+                        memory[index + 2] = static_cast<uint_fast8_t>(tempNum % 10);
+                        progCounter += 2;
+                        std::cout << "0xFR33: store decimal in 3 binary addrs" << std::endl;
+                    }
                     break;
-                }
+
+                // 0xFR55 (registers[0 to R] are dumped to memory starting at index)
+                case 0x55:
+                    {
+                        uint_fast8_t lastRegister = registers[(opCode >> 8) & 0xF];
+                        for (uint_fast8_t i = 0; i <= lastRegister; ++i)
+                        {
+                            memory[index + i] = registers[i];
+                        }
+                        progCounter += 2;
+                        std::cout << "0xFR55: Write regs[0-R] at index" << std::endl;
+                    }
+                    break;
+
+                // 0xFR65 (memory starting at index copied to registers[0 to R])
+                case 0x65:
+                    {
+                        uint_fast8_t lastRegister = registers[(opCode >> 8) & 0xF];
+                        for (uint_fast8_t i = 0; i <= lastRegister; ++i)
+                        {
+                            registers[i] = memory[index + i];
+                        }
+                        progCounter += 2;
+                        std::cout << "0xFR55: Write index to regs[0-R]" << std::endl;
+                    }
+                    break;
 
                 // opCode is not implemented, so crash already
                 default:
-                    std::cout << "OpCode not implemented" << std::endl;
+                    std::cout << "OpCode not implemented (" << std::hex << opCode << ")" << std::endl;
                     return false;
             }
             break;
