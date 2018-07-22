@@ -12,9 +12,16 @@ class Display
         Display();
         Display(int height, int width);
 
+        void drawDisplay();
+
+
+
     private:
         int height;
         int width;
+
+        char displayBuffer[256];
+
 
         int getHeight() const;
         void setHeight(int height);
