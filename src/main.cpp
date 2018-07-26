@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
 
     //bool isRunning = true;
 
-    while (cpu0.nextCycle())
+    while (cpu0.runCycle())
     {
         // TODO: run one cycle
         // TODO: update screen

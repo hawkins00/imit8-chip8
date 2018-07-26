@@ -20,6 +20,7 @@
 #define STACK_DEPTH 16
 #define NUMBER_OF_KEYPAD_BUTTONS 16
 #define FONT_SIZE 0x50
+#define BYTES_PER_FONT_CHAR static_cast<unsigned char>(0x5)
 #define CODE_START static_cast<unsigned short>(0x200)
 
 
@@ -35,7 +36,7 @@ class chip8
 
         bool loadFile(const std::string& fileToLoad);
 
-        bool nextCycle();
+        bool runCycle();
 
     private:
 
@@ -94,6 +95,12 @@ class chip8
         bool fetch();
         bool decode();
         bool execute();
+        unsigned char getHexDigit1(unsigned short hexShort);
+        unsigned char getHexDigit2(unsigned short hexShort);
+        unsigned char getHexDigit3(unsigned short hexShort);
+        unsigned char getHexDigit4(unsigned short hexShort);
+        unsigned char getHexDigits3and4(unsigned short hexShort);
+        unsigned short getHexAddress(unsigned short hexShort);
 };
 
 #endif //IMIT8_CHIP8_CHIP8_H
