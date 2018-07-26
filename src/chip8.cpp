@@ -3,8 +3,6 @@
  * Implementation of the Chip-8 CPU Core.
  */
 
-// XXX: seriously rethink this uint_fastX_t junk :/
-
 #include "chip8.h"
 
 chip8::
@@ -85,13 +83,15 @@ bool chip8::
 loadROM(std::ifstream* fin)
 {
     char op;
-    int i = CODE_START;
+    unsigned short i = CODE_START;
     for (; i < MEMORY_SIZE && !fin->eof(); ++i)
     {
         fin->read(&op, 1);
-        memory[i] = static_cast<uint_fast8_t>(op);
+        memory[i] = static_cast<unsigned char>(op);
     }
-    romBytes = static_cast<uint_fast16_t>(i - CODE_START - 1);
+    romBytes = i - CODE_START;
+    // FIXME: romBytes might (?) be negative with 0-sized file (not good)
+    romBytes--;
 
     // If we filled the memory, but we're not at the end of the file, then the ROM is too big.
     // If the length of the ROM file is not even (or 0), it's an error (all instructions are two bytes).
@@ -119,10 +119,11 @@ nextCycle()
 bool chip8::
 fetch()
 {
-    if (progCounter >= CODE_START + romBytes || progCounter < CODE_START || progCounter % 2) {
+    if (progCounter >= CODE_START + romBytes || progCounter < CODE_START || progCounter % 2)
+    {
         return false;
     }
-    opCode = static_cast<uint_fast16_t>(memory[progCounter] << 8 | memory[progCounter + 1]);
+    opCode = memory[progCounter] << 8 | memory[progCounter + 1];
     return true;
 }
 
@@ -142,7 +143,7 @@ decode()
 
         // 0x1XXX (goto)
         case 0x1:
-            progCounter = opCode & 0x0FFF;
+            progCounter = opCode & static_cast<unsigned short>(0x0FFF);
             // check segfault (is this necessary?) or odd address
             if (progCounter < CODE_START || progCounter % 2)
             {
@@ -154,7 +155,7 @@ decode()
         // 0x2XXX (subroutine call)
         case 0x2:
             callStack.push(progCounter);
-            progCounter = opCode & 0x0FFF;
+            progCounter = opCode & static_cast<unsigned short>(0x0FFF);
 
             // stack overflow or segfault or odd address
             if (callStack.size() > STACK_DEPTH || progCounter < CODE_START || progCounter % 2)
@@ -179,7 +180,7 @@ decode()
             }
             break;
 
-        // 0x4RXX (skip next opcode if registers[R] != XX
+        // 0x4RXX (skip next opCode if registers[R] != XX
         case 0x4:
             if (registers[(opCode >> 8) & 0xF] != opCode & 0xFF)
             {
@@ -193,7 +194,7 @@ decode()
             }
             break;
 
-        // 0x5RS0 (skip next opcode if registers[R] == registers[S]
+        // 0x5RS0 (skip next opCode if registers[R] == registers[S]
         case 0x5:
             switch (opCode & 0xF)
             {
@@ -215,11 +216,18 @@ decode()
             }
             break;
 
-        // 0x6RXX (set registers[R] = XX)
+        // 0x6RXX (registers[R] = XX)
         case 0x6:
-            registers[(opCode >> 8) & 0xF] = static_cast<uint_fast8_t>(opCode & 0xFF);
+            registers[(opCode >> 8) & 0xF] = static_cast<unsigned char>(opCode & 0xFF);
             progCounter += 2;
             std::cout << "0x6RXX" << std::endl;
+            break;
+
+        // 0x7RXX (registers[R] += XX)
+        case 0x7:
+            registers[(opCode >> 8) & 0xF] += static_cast<unsigned char>(opCode & 0xFF);
+            progCounter += 2;
+            std::cout << "0x7RXX" << std::endl;
             break;
 
         // 0xFRXX
@@ -237,10 +245,10 @@ decode()
                 // 0xFR0A (execution waits for keypress, stored in registers[R])
                 case 0x0A:
                     std::cout << "0xFR0A: waiting for keypress..." << std::endl;
-                    uint_fast8_t tempChar;
+                    unsigned char tempChar;
                     do
                     {
-                        tempChar = static_cast<uint_fast8_t>(getchar() & 0xFF);
+                        tempChar = static_cast<unsigned char>(getchar() & 0xFF);
                     } while (!isxdigit(tempChar));
                     registers[(opCode >> 8) & 0xF] = tempChar;
                     progCounter += 2;
@@ -249,7 +257,7 @@ decode()
 
                 // 0xFR15 (delayInterruptTimer = registers[R])
                 case 0x15:
-                    delayInterruptTimer = static_cast<uint_fast8_t>(registers[(opCode >> 8) & 0xF]);
+                    delayInterruptTimer = registers[(opCode >> 8) & 0xF];
                     progCounter += 2;
                     //std::cout << std::hex << ((opCode >> 8) & 0x0F) << std::endl;
                     //std::cout << "Delay: " << std::hex << (int)delayInterruptTimer << std::endl;
@@ -257,7 +265,7 @@ decode()
 
                 // 0xFR18 (soundInterruptTimer = registers[R])
                 case 0x18:
-                    soundInterruptTimer = static_cast<uint_fast8_t>(registers[(opCode >> 8) & 0xF]);
+                    soundInterruptTimer = registers[(opCode >> 8) & 0xF];
                     progCounter += 2;
                     //std::cout << std::hex << ((opCode >> 8) & 0x0F) << std::endl;
                     //std::cout << "Sound: " << std::hex << (int)soundInterruptTimer << std::endl;
@@ -273,7 +281,7 @@ decode()
                 // 0xFR29 (set index to address of sprite for character in registers[R])
                 case 0x29:
                     // TODO (?): check if index is legal
-                    index = static_cast<uint_fast16_t>(registers[(opCode >> 8) & 0xF] * 5);
+                    index = static_cast<unsigned short>(registers[(opCode >> 8) & 0xF] * 5);
                     progCounter += 2;
                     std::cout << "0xFR29: index = font sprite address" << std::endl;
                     break;
@@ -281,10 +289,10 @@ decode()
                 // 0xFR33 (binary-coded decimal of registers[R] stored in index, +1, +2)
                 case 0x33:
                     {
-                        uint_fast8_t tempNum = registers[(opCode >> 8) & 0xF];
-                        memory[index] = static_cast<uint_fast8_t>(tempNum / 100);
-                        memory[index + 1] = static_cast<uint_fast8_t>(tempNum / 10 % 10);
-                        memory[index + 2] = static_cast<uint_fast8_t>(tempNum % 10);
+                        unsigned char tempNum = registers[(opCode >> 8) & 0xF];
+                        memory[index] = static_cast<unsigned char>(tempNum / 100);
+                        memory[index + 1] = static_cast<unsigned char>(tempNum / 10 % 10);
+                        memory[index + 2] = static_cast<unsigned char>(tempNum % 10);
                         progCounter += 2;
                         std::cout << "0xFR33: store decimal in 3 binary addrs" << std::endl;
                     }
@@ -293,11 +301,14 @@ decode()
                 // 0xFR55 (registers[0 to R] are dumped to memory starting at index)
                 case 0x55:
                     {
-                        uint_fast8_t lastRegister = registers[(opCode >> 8) & 0xF];
-                        for (uint_fast8_t i = 0; i <= lastRegister; ++i)
+                        int lastRegister = (opCode >> 8) & 0xF;
+                        // FIXME: this causes segfaults, may just need other opCodes implemented
+                        /*
+                        for (int i = 0; i <= lastRegister; ++i)
                         {
                             memory[index + i] = registers[i];
                         }
+                         */
                         progCounter += 2;
                         std::cout << "0xFR55: Write regs[0-R] at index" << std::endl;
                     }
@@ -306,11 +317,14 @@ decode()
                 // 0xFR65 (memory starting at index copied to registers[0 to R])
                 case 0x65:
                     {
-                        uint_fast8_t lastRegister = registers[(opCode >> 8) & 0xF];
-                        for (uint_fast8_t i = 0; i <= lastRegister; ++i)
+                        int lastRegister = (opCode >> 8) & 0xF;
+                        // FIXME: this causes segfaults, may just need other opCodes implemented
+                        /*
+                        for (int i = 0; i <= lastRegister; ++i)
                         {
                             registers[i] = memory[index + i];
                         }
+                         */
                         progCounter += 2;
                         std::cout << "0xFR55: Write index to regs[0-R]" << std::endl;
                     }

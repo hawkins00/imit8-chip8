@@ -20,7 +20,7 @@
 #define STACK_DEPTH 16
 #define NUMBER_OF_KEYPAD_BUTTONS 16
 #define FONT_SIZE 0x50
-#define CODE_START 0x200
+#define CODE_START static_cast<unsigned short>(0x200)
 
 
 class chip8
@@ -41,50 +41,50 @@ class chip8
 
         // Simulates the system memory (RAM).  This should probably
         // be moved to it's own object at some point for good OOP...
-        uint_fast8_t memory[MEMORY_SIZE];
+        unsigned char memory[MEMORY_SIZE];
 
         // Simulates the CPU registers.
         // Registers named V0 through VE.  16th register ("VF") used as "carry flag".
-        uint_fast8_t registers[NUMBER_OF_REGISTERS];
+        unsigned char registers[NUMBER_OF_REGISTERS];
 
         // "Index" register.
-        uint_fast16_t index;
+        unsigned short index;
 
         // Program counter.
-        uint_fast16_t progCounter;
+        unsigned short progCounter;
 
         // Used to store the current opCode to be processed.
-        uint_fast16_t opCode;
+        unsigned short opCode;
 
         // Used to simulate VRAM, this is the buffer that gets written to the display.
-        uint_fast8_t graphicsBuffer[SCREEN_HEIGHT * SCREEN_WIDTH];
+        unsigned char graphicsBuffer[SCREEN_HEIGHT * SCREEN_WIDTH];
 
         // Font to store in memory (0-F)
-        uint_fast8_t font[FONT_SIZE] = {0xF0, 0x90, 0x90, 0x90, 0xF0, 0x20, 0x60, 0x20, 0x20, 0x70,
-                                        0xF0, 0x10, 0xF0, 0x80, 0xF0, 0xF0, 0x10, 0xF0, 0x10, 0xF0,
-                                        0x90, 0x90, 0xF0, 0x10, 0x10, 0xF0, 0x80, 0xF0, 0x10, 0xF0,
-                                        0xF0, 0x80, 0xF0, 0x90, 0xF0, 0xF0, 0x10, 0x20, 0x40, 0x40,
-                                        0xF0, 0x90, 0xF0, 0x90, 0xF0, 0xF0, 0x90, 0xF0, 0x10, 0xF0,
-                                        0xF0, 0x90, 0xF0, 0x90, 0x90, 0xE0, 0x90, 0xE0, 0x90, 0xE0,
-                                        0xF0, 0x80, 0x80, 0x80, 0xF0, 0xE0, 0x90, 0x90, 0x90, 0xE0,
-                                        0xF0, 0x80, 0xF0, 0x80, 0xF0, 0xF0, 0x80, 0xF0, 0x80, 0x80};
+        unsigned char font[FONT_SIZE] = {0xF0, 0x90, 0x90, 0x90, 0xF0, 0x20, 0x60, 0x20, 0x20, 0x70,
+                                         0xF0, 0x10, 0xF0, 0x80, 0xF0, 0xF0, 0x10, 0xF0, 0x10, 0xF0,
+                                         0x90, 0x90, 0xF0, 0x10, 0x10, 0xF0, 0x80, 0xF0, 0x10, 0xF0,
+                                         0xF0, 0x80, 0xF0, 0x90, 0xF0, 0xF0, 0x10, 0x20, 0x40, 0x40,
+                                         0xF0, 0x90, 0xF0, 0x90, 0xF0, 0xF0, 0x90, 0xF0, 0x10, 0xF0,
+                                         0xF0, 0x90, 0xF0, 0x90, 0x90, 0xE0, 0x90, 0xE0, 0x90, 0xE0,
+                                         0xF0, 0x80, 0x80, 0x80, 0xF0, 0xE0, 0x90, 0x90, 0x90, 0xE0,
+                                         0xF0, 0x80, 0xF0, 0x80, 0xF0, 0xF0, 0x80, 0xF0, 0x80, 0x80};
 
         // "Interrupt timers" that the CHIP-8 uses for delays and sound purposes.
         // These timers go off every 60Hz.  They are set to some value > 0, and count down to zero.
         // When the timer reaches zero, a delay or sound is triggered.
-        uint_fast8_t delayInterruptTimer;
-        uint_fast8_t soundInterruptTimer;
+        unsigned char delayInterruptTimer;
+        unsigned char soundInterruptTimer;
 
         // The Chip-8 system does not have a stack, but we need one to keep track of where to return to
         // when a function call is made.
-        std::stack<uint_fast16_t, std::vector<uint_fast16_t>> callStack;
+        std::stack<unsigned short, std::vector<unsigned short>> callStack;
 
         // The Chip-8 system has a keypad that uses 16 buttons, labeled in HEX (0x0-0xF).
         // This array stores the values of the keys currently being pressed.
-        uint_fast8_t keypad[NUMBER_OF_KEYPAD_BUTTONS];
+        unsigned char keypad[NUMBER_OF_KEYPAD_BUTTONS];
 
         // size of loaded ROM in bytes
-        uint_fast16_t romBytes;
+        unsigned short romBytes;
 
         // Load font into memory
         bool loadFontSet();
