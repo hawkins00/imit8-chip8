@@ -160,8 +160,8 @@ decode()
                 default:
                     std::cout << "0x0XXX: call to address XXX" << std::endl;
                     std::cout << "Not used in modern VMs" << std::endl;
-                    progCounter += 2;
-                    break;
+                    return false;
+                    //break;
             }
             break;
 
@@ -220,23 +220,21 @@ decode()
 
         // 0x5RS0 (skip next opCode if registers[R] == registers[S]
         case 0x5:
-            switch (getHexDigit4(opCode))
+            if (getHexDigit4(opCode) != 0)
             {
-                case (0):
-                    if (registers[getHexDigit2(opCode)] == registers[getHexDigit3(opCode)])
-                    {
-                        progCounter += 4;
-                        std::cout << "0x5RS0 (skip next)" << std::endl;
-                    }
-                    else
-                    {
-                        progCounter += 2;
-                        std::cout << "0x5RS0 (don't skip next)" << std::endl;
-                    }
-                    break;
-                default:
-                    // TODO: error
-                    return false;
+                std::cout << "OpCode not implemented (" << std::hex << opCode << ")" << std::endl;
+                return false;
+            }
+
+            if (registers[getHexDigit2(opCode)] == registers[getHexDigit3(opCode)])
+            {
+                progCounter += 4;
+                std::cout << "0x5RS0 (skip next)" << std::endl;
+            }
+            else
+            {
+                progCounter += 2;
+                std::cout << "0x5RS0 (don't skip next)" << std::endl;
             }
             break;
 
@@ -256,37 +254,194 @@ decode()
 
         // 0x8XXX
         case 0x8:
-            std::cout << "0x8XXX" << std::endl;
+            switch (getHexDigit4(opCode))
+            {
+                // 0x8RS0 (registers[R] = registers[S])
+                case 0x0:
+                    registers[getHexDigit2(opCode)] = registers[getHexDigit3(opCode)];
+                    progCounter += 2;
+                    std::cout << "0x8RS0" << std::hex << opCode << std::endl;
+                    break;
+
+                // 0x8RS1 (registers[R] |= registers[S])
+                case 0x1:
+                    registers[getHexDigit2(opCode)] |= registers[getHexDigit3(opCode)];
+                    progCounter += 2;
+                    std::cout << "0x8RS1" << std::hex << opCode << std::endl;
+                    break;
+
+                // 0x8RS2 (registers[R] &= registers[S])
+                case 0x2:
+                    registers[getHexDigit2(opCode)] &= registers[getHexDigit3(opCode)];
+                    progCounter += 2;
+                    std::cout << "0x8RS2" << std::hex << opCode << std::endl;
+                    break;
+
+                // 0x8RS3 (registers[R] ^= registers[S])
+                case 0x3:
+                    registers[getHexDigit2(opCode)] ^= registers[getHexDigit3(opCode)];
+                    progCounter += 2;
+                    std::cout << "0x8RS3" << std::hex << opCode << std::endl;
+                    break;
+
+                // 0x8RS4 (registers[R] += registers[S], updates carry (registers[0xF]))
+                case 0x4:
+                {
+                    unsigned char r = registers[getHexDigit2(opCode)];
+                    unsigned char s = registers[getHexDigit3(opCode)];
+                    registers[getHexDigit2(opCode)] = r + s;
+                    registers[0xF] = (r + s) > 0xFF ? 1 : 0; // carry bit
+                    progCounter += 2;
+                    std::cout << "0x8RS4" << std::hex << opCode << std::endl;
+                    break;
+                }
+
+                // 0x8RS5 (registers[R] -= registers[S], updates carry (registers[0xF]) as borrow)
+                case 0x5:
+                {
+                    unsigned char r = registers[getHexDigit2(opCode)];
+                    unsigned char s = registers[getHexDigit3(opCode)];
+                    registers[getHexDigit2(opCode)] -= s;
+                    // VVV Not sure if this is correct VVV
+                    registers[0xF] = r < s ? 0 : 1; // carry (borrow) bit
+                    progCounter += 2;
+                    std::cout << "0x8RS5" << std::hex << opCode << std::endl;
+                    break;
+                }
+
+                // 0x8RS6 (registers[R] = registers[S] >> 1, updates carry (registers[0xF] = LSB))
+                case 0x6:
+                {
+                    unsigned char s = registers[getHexDigit3(opCode)];
+                    registers[getHexDigit2(opCode)] = s >> 1;
+                    registers[0xF] = s & 1;
+                    progCounter += 2;
+                    std::cout << "0x8RS6" << std::hex << opCode << std::endl;
+                    break;
+                }
+
+                // 0x8RS7 (registers[R] = registers[S] - registers[R], updates carry (registers[0xF]) as borrow)
+                case 0x7:
+                {
+                    unsigned char r = registers[getHexDigit2(opCode)];
+                    unsigned char s = registers[getHexDigit3(opCode)];
+                    registers[getHexDigit2(opCode)] = s - r;
+                    registers[0xF] = s < r ? 0 : 1; // carry (borrow) bit
+                    progCounter += 2;
+                    std::cout << "0x8RS7" << std::hex << opCode << std::endl;
+                    break;
+                }
+
+                // 0x8RSE (registers[R] = registers[S] << 1, updates carry (registers[0xF] = MSB))
+                case 0xE:
+                {
+                    unsigned char s = registers[getHexDigit3(opCode)];
+                    registers[0xF] = s & 0x80;
+                    s <<= 1;
+                    registers[getHexDigit2(opCode)] = s;
+                    registers[getHexDigit3(opCode)] = s;
+                    progCounter += 2;
+                    std::cout << "0x8RSE" << std::hex << opCode << std::endl;
+                    break;
+                }
+
+                default:
+                    std::cout << "OpCode not implemented (" << std::hex << opCode << ")" << std::endl;
+                    return false;
+            }
             break;
 
-        // 0x9XXX
+        // 0x9RS0 (skips next opCode if registers[R] != registers[S])
         case 0x9:
-            std::cout << "0x9XXX" << std::endl;
+            if (getHexDigit4(opCode) != 0)
+            {
+                std::cout << "OpCode not implemented (" << std::hex << opCode << ")" << std::endl;
+                return false;
+            }
+
+            if (registers[getHexDigit2(opCode)] != getHexDigit3(opCode))
+            {
+                progCounter += 4;
+                std::cout << "0x9 (skip next)" << std::endl;
+            }
+            else
+            {
+                progCounter += 2;
+                std::cout << "0x9 (don't skip next)" << std::endl;
+            }
             break;
 
-        // 0xAXXX
+        // 0xAXXX (index = XXX)
         case 0xA:
+            index = getHexAddress(opCode);
+            progCounter += 2;
             std::cout << "0xAXXX" << std::endl;
             break;
 
-        // 0xBXXX
+        // 0xBXXX (pc = registers[0] + XXX)
         case 0xB:
+            progCounter = registers[0] + getHexAddress(opCode);
             std::cout << "0xBXXX" << std::endl;
             break;
 
-        // 0xCXXX
+        // 0xCRXX (registers[R] = rand() & XX)
         case 0xC:
+            registers[getHexDigit2(opCode)] = (rand() % 256) & getHexDigits3and4(opCode);
+            progCounter += 2;
             std::cout << "0xCXXX" << std::endl;
             break;
 
-        // 0xDXXX
+        // TODO: This opCode definitely needs more testing
+        // 0xDXYH (draw an 8xH sprite at x = registers[X], y = registers[Y])
         case 0xD:
-            std::cout << "0xDXXX" << std::endl;
+        {
+            unsigned char x = registers[getHexDigit2(opCode)];
+            unsigned char y = registers[getHexDigit3(opCode)];
+            unsigned char h = getHexDigit4(opCode);
+            unsigned short start = SCREEN_START + x + y * (SCREEN_WIDTH >> 3);
+            std::cout << std::dec << "x: " << (int)x << " y: " << (int)y << " h: " << (int)h << std::hex << " start: " << start << " index: " << index <<  std::endl;
+            for (int i = 0; i < h; ++i)
+            {
+                memory[start + i * (SCREEN_WIDTH >> 3)] ^= memory[index + i];
+            }
+            progCounter += 2;
+            std::cout << "0xDXYH - Draw: " << std::hex << opCode << std::endl;
+        }
             break;
 
         // 0xEXXX
         case 0xE:
-            std::cout << "0xEXXX" << std::endl;
+            switch (getHexDigits3and4(opCode))
+            {
+                // 0xER9E (skip next opCode if key[registers[R]])
+                case 0x9E:
+                    if (keypad[registers[getHexDigit2(opCode)]])
+                    {
+                        progCounter += 4;
+                    }
+                    else
+                    {
+                        progCounter += 2;
+                    }
+                    break;
+
+                // 0xERA1 (skip next opCode if !key[registers[R]])
+                case 0xA1:
+                    if (!keypad[registers[getHexDigit2(opCode)]])
+                    {
+                        progCounter += 4;
+                    }
+                    else
+                    {
+                        progCounter += 2;
+                    }
+                    break;
+
+                // opCode is not implemented, so crash already
+                default:
+                    std::cout << "OpCode not implemented (" << std::hex << opCode << ")" << std::endl;
+                    return false;
+            }
             break;
 
         // 0xFRXX
@@ -300,7 +455,7 @@ decode()
                     std::cout << "0xFR07" << std::endl;
                     break;
 
-                // FIXME (maybe?): Who knows if this is a correct way to get the keypress
+                // FIXME: need better way to get keypress
                 // 0xFR0A (execution waits for keypress, stored in registers[R])
                 case 0x0A:
                     std::cout << "0xFR0A: waiting for keypress..." << std::endl;
@@ -318,16 +473,14 @@ decode()
                 case 0x15:
                     delayInterruptTimer = registers[getHexDigit2(opCode)];
                     progCounter += 2;
-                    //std::cout << std::hex << ((opCode >> 8) & 0x0F) << std::endl;
-                    //std::cout << "Delay: " << std::hex << (int)delayInterruptTimer << std::endl;
+                    std::cout << "0xFR15 - Delay: " << std::hex << (int)delayInterruptTimer << std::endl;
                     break;
 
                 // 0xFR18 (soundInterruptTimer = registers[R])
                 case 0x18:
                     soundInterruptTimer = registers[getHexDigit2(opCode)];
                     progCounter += 2;
-                    //std::cout << std::hex << ((opCode >> 8) & 0x0F) << std::endl;
-                    //std::cout << "Sound: " << std::hex << (int)soundInterruptTimer << std::endl;
+                    std::cout << "0xFR18 - Sound: " << std::hex << (int)soundInterruptTimer << std::endl;
                     break;
 
                 // 0xFR1E (index += registers[R])
@@ -362,12 +515,11 @@ decode()
                 {
                     int lastRegister = getHexDigit2(opCode);
                     // FIXME: this causes segfaults, may just need other opCodes implemented
-                    /*
+                    // maybe good now ?
                     for (int i = 0; i <= lastRegister; ++i)
                     {
                         memory[index + i] = registers[i];
                     }
-                     */
                     progCounter += 2;
                     std::cout << "0xFR55: Write regs[0-R] at index" << std::endl;
                 }
@@ -378,12 +530,11 @@ decode()
                 {
                     int lastRegister = getHexDigit2(opCode);
                     // FIXME: this causes segfaults, may just need other opCodes implemented
-                    /*
+                    // maybe good now ?
                     for (int i = 0; i <= lastRegister; ++i)
                     {
                         registers[i] = memory[index + i];
                     }
-                     */
                     progCounter += 2;
                     std::cout << "0xFR55: Write index to regs[0-R]" << std::endl;
                 }
@@ -398,7 +549,10 @@ decode()
 
         default:
         {
-            progCounter += 2;
+            /* FIXME: this should stop execution once all opCodes are implemented
+               just a catch for non-implemented opCodes */
+            //progCounter += 2;
+            return false;
             std::cout << "default" << std::endl;
         }
     }
@@ -407,12 +561,16 @@ decode()
     return true;
 }
 
-// TODO: Combine with decode() ?
+// TODO: Combine with decode() ?, these should be 60Hz regardless of main loop
 // Execute the decoded operation
 bool chip8::execute()
 {
     if (soundInterruptTimer > 0)
     {
+        /*
+        if (soundInterruptTimer > 1)
+            beep();
+        */
         --soundInterruptTimer;
     }
     if (delayInterruptTimer > 0)

@@ -19,9 +19,10 @@
 #define NUMBER_OF_REGISTERS 16
 #define STACK_DEPTH 16
 #define NUMBER_OF_KEYPAD_BUTTONS 16
-#define FONT_SIZE 0x50
+#define FONT_SIZE 80
 #define BYTES_PER_FONT_CHAR static_cast<unsigned char>(0x5)
 #define CODE_START static_cast<unsigned short>(0x200)
+#define SCREEN_START static_cast<unsigned short>(0xF00)
 
 
 class chip8
