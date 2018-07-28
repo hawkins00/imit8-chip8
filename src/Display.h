@@ -10,6 +10,7 @@ class Display
 {
     public:
         Display();
+        Display(unsigned char * screen);
         void drawDisplay();
 
     private:
@@ -17,6 +18,7 @@ class Display
 
         int height;
         int width;
+        unsigned char * screen;
         char displayBuffer[256];
         int getHeight() const;
 

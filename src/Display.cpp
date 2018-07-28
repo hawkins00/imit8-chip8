@@ -6,29 +6,32 @@
 #include <iostream>
 #include "Display.h"
 
-Display::Display()
+Display::Display(unsigned char * screen)
 {
     std::cout << "Display was initialized without a height and a width value.  Using the Chip-8 default (64x32)." << std::endl;
     setHeight(32);
     setWidth(64);
+    Display::screen = screen;
 }
 
 
 void Display::drawDisplay()
 {
-    clearScreen();
+    //clearScreen();
 
-    unsigned char myChar = 0xBD;
-    printChar(myChar);
+//    unsigned char myChar = 0xBD;
+//    printChar(myChar);
 
-    std::cout << "\n\nDisplay:\n\n";
+    //std::cout << "\n\nDisplay:\n\n";
 
+    std::cout << std::endl;
     for(int row = 0; row < getHeight(); ++row)
     {
         for(int columnOf8 = 0; columnOf8 < getWidth() / 8; ++columnOf8)
         {
 //            printChar(displayBuffer[(row * 8) + columnOf8]);
-            printChar(myChar);
+            printChar(screen[row * 8 + columnOf8]);
+//            std::cout << "X";
             if((columnOf8+1) % 8 == 0)
             {
                 std::cout << std::endl;
@@ -36,7 +39,7 @@ void Display::drawDisplay()
         }
     }
 
-    std::cout << "\n\n";
+    //std::cout << "\n\n";
 
 
 
@@ -47,10 +50,10 @@ void Display::drawDisplay()
 void Display::clearScreen()
 {
     #ifdef WINDOWS
-        std::cout << "assuming windows";
+        //std::cout << "assuming windows";
         std::system("cls");
     #else
-        std::cout << "assuming linux";
+        //std::cout << "assuming linux";
         std::system("clear");
     #endif
 }
@@ -61,7 +64,7 @@ void Display::printChar(unsigned char toPrint)
     {
         if(toPrint & (128 >> i))
         {
-            std::cout << "*";
+            std::cout << "▀"; //█▀
         }
         else
         {

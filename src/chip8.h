@@ -37,6 +37,8 @@ class chip8
 
         bool loadFile(const std::string& fileToLoad);
 
+        unsigned char* getScreen();
+
         bool runCycle();
 
     private:
