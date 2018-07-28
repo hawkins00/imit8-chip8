@@ -126,7 +126,8 @@ runCycle()
 bool chip8::
 fetch()
 {
-    if (progCounter >= CODE_START + romBytes || progCounter < CODE_START || progCounter % 2)
+//    if (progCounter >= CODE_START + romBytes || progCounter < CODE_START || progCounter % 2)
+    if (progCounter % 2)
     {
         return false;
     }
@@ -302,7 +303,7 @@ decode()
                     unsigned char s = registers[getHexDigit3(opCode)];
                     registers[getHexDigit2(opCode)] = r + s;
                     // TODO: VVV is r + s implicitly cast to a larger type so this works?
-                    registers[0xF] = (r + s) > 0xFF ? 1 : 0; // carry bit
+                    registers[0xF] = ((int)r + (int)s) > 0xFF ? 1 : 0; // carry bit
                     progCounter += 2;
                     //std::cout << "0x8RS4" << std::hex << opCode << std::endl;
                     break;
@@ -371,7 +372,7 @@ decode()
                 return false;
             }
 
-            if (registers[getHexDigit2(opCode)] != getHexDigit3(opCode))
+            if (registers[getHexDigit2(opCode)] != registers[getHexDigit3(opCode)])
             {
                 progCounter += 4;
                 //std::cout << "0x9 (skip next)" << std::endl;
@@ -441,7 +442,6 @@ decode()
                     memory[loc + 1] ^= toWrite2;
                     if (temp1 & toWrite1 < temp1 || temp2 & toWrite2 < temp2)
                     {
-
                         registers[0xF] |= 1;
                     }
                 }
@@ -549,8 +549,8 @@ decode()
                     memory[index + 2] = tempNum % 10;
                     progCounter += 2;
                     //std::cout << "0xFR33: store decimal in 3 binary addrs" << std::endl;
-                }
                     break;
+                }
 
                 // 0xFR55 (registers[0 to R] are dumped to memory starting at index)
                 case 0x55:
@@ -564,8 +564,8 @@ decode()
                     }
                     progCounter += 2;
                     //std::cout << "0xFR55: Write regs[0-R] at index" << std::endl;
-                }
                     break;
+                }
 
                 // 0xFR65 (memory starting at index copied to registers[0 to R])
                 case 0x65:
@@ -579,8 +579,8 @@ decode()
                     }
                     progCounter += 2;
                     //std::cout << "0xFR55: Write index to regs[0-R]" << std::endl;
-                }
                     break;
+                }
 
                 // opCode is not implemented, so crash already
                 default:
