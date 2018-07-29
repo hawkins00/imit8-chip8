@@ -301,9 +301,9 @@ decode()
                 {
                     unsigned char r = registers[getHexDigit2(opCode)];
                     unsigned char s = registers[getHexDigit3(opCode)];
-                    registers[getHexDigit2(opCode)] = r + s;
+                    registers[getHexDigit2(opCode)] += s;
                     // TODO: VVV is r + s implicitly cast to a larger type so this works?
-                    registers[0xF] = ((int)r + (int)s) > 0xFF ? 1 : 0; // carry bit
+                    registers[0xF] = r > 0xFF - s ? 1 : 0; // carry bit
                     progCounter += 2;
                     //std::cout << "0x8RS4" << std::hex << opCode << std::endl;
                     break;
@@ -316,7 +316,7 @@ decode()
                     unsigned char s = registers[getHexDigit3(opCode)];
                     registers[getHexDigit2(opCode)] -= s;
                     // VVV Not sure if this is correct VVV
-                    registers[0xF] = r < s ? 0 : 1; // carry (borrow) bit
+                    registers[0xF] = s > r ? 0 : 1; // carry (borrow) bit
                     progCounter += 2;
                     //std::cout << "0x8RS5" << std::hex << opCode << std::endl;
                     break;
@@ -339,20 +339,22 @@ decode()
                     unsigned char r = registers[getHexDigit2(opCode)];
                     unsigned char s = registers[getHexDigit3(opCode)];
                     registers[getHexDigit2(opCode)] = s - r;
-                    registers[0xF] = s < r ? 0 : 1; // carry (borrow) bit
+                    registers[0xF] = r > s ? 0 : 1; // carry (borrow) bit
                     progCounter += 2;
                     //std::cout << "0x8RS7" << std::hex << opCode << std::endl;
                     break;
                 }
 
                 // 0x8RSE (registers[R] = registers[S] << 1, updates carry (registers[0xF] = MSB))
+                // TODO: This opCode is described at least three different ways in various sources,
+                //       not sure which is correct
                 case 0xE:
                 {
                     unsigned char s = registers[getHexDigit3(opCode)];
-                    registers[0xF] = (s & 0x80) ? 1 : 0;
+                    registers[0xF] = s >> 7;
                     s <<= 1;
                     registers[getHexDigit2(opCode)] = s;
-                    registers[getHexDigit3(opCode)] = s;
+                    //registers[getHexDigit3(opCode)] = s;
                     progCounter += 2;
                     //std::cout << "0x8RSE" << std::hex << opCode << std::endl;
                     break;
@@ -404,45 +406,54 @@ decode()
             //std::cout << "0xCXXX" << std::endl;
             break;
 
-        // TODO: This opCode definitely needs more testing
         // 0xDXYH (draw an 8xH sprite at x = registers[X], y = registers[Y])
         case 0xD:
         {
             registers[0xF] = 0;
             unsigned char x = registers[getHexDigit2(opCode)];
             unsigned char y = registers[getHexDigit3(opCode)];
-            unsigned char h = getHexDigit4(opCode);
-            int xByte = x / 8;
-            int xBit = x % 8;
-            unsigned short start = SCREEN_START + xByte + (y * (SCREEN_WIDTH >> 3));
-            //std::cout << std::dec << "x: " << (int)x << " y: " << (int)y << " h: " << (int)h << std::hex << " start: " << start << " index: " << index <<  std::endl;
-            if (xBit == 0)
+            if (x < SCREEN_WIDTH && y < SCREEN_HEIGHT)
             {
-                for (int i = 0; i < h; ++i)
+                unsigned char h = getHexDigit4(opCode);
+                int xByte = x / 8;
+                int xBit = x % 8;
+                unsigned short start = SCREEN_START + xByte + (y * (SCREEN_WIDTH >> 3));
+                //std::cout << std::dec << "x: " << (int)x << " y: " << (int)y << " h: " << (int)h << std::hex << " start: " << start << " index: " << index <<  std::endl;
+                if (xBit == 0) // Drawing to a single byte per line
                 {
-                    unsigned short loc = start + i * (SCREEN_WIDTH >> 3);
-                    unsigned char temp = memory[loc];
-                    memory[loc] ^= memory[index + i];
-                    if (temp & memory[loc] < temp)
+                    for (int i = 0; i < h && i + y < SCREEN_HEIGHT; ++i)
                     {
-                        registers[0xF] |= 1;
+                        unsigned short loc = start + i * (SCREEN_WIDTH >> 3);
+                        unsigned char temp = memory[loc];
+                        memory[loc] ^= memory[index + i];
+                        if (temp & memory[loc])
+                        {
+                            registers[0xF] |= 1;
+                        }
                     }
                 }
-            }
-            else
-            {
-                for (int i = 0; i < h; ++i)
+                else // Drawing to two bytes per line
                 {
-                    unsigned short loc = start + i * (SCREEN_WIDTH >> 3);
-                    unsigned char temp1 = memory[loc];
-                    unsigned char temp2 = memory[loc + 1];
-                    unsigned char toWrite1 = memory[index + i] >> xBit;
-                    unsigned char toWrite2 = memory[index + i] << (8 - xBit);
-                    memory[loc] ^= toWrite1;
-                    memory[loc + 1] ^= toWrite2;
-                    if (temp1 & toWrite1 < temp1 || temp2 & toWrite2 < temp2)
+                    for (int i = 0; i < h && i + y < SCREEN_HEIGHT; ++i)
                     {
-                        registers[0xF] |= 1;
+                        unsigned short loc = start + i * (SCREEN_WIDTH >> 3);
+                        unsigned char temp1 = memory[loc];
+                        unsigned char toWrite1 = memory[index + i] >> xBit;
+                        memory[loc] ^= toWrite1;
+                        if (temp1 & toWrite1)
+                        {
+                            registers[0xF] |= 1;
+                        }
+                        if (xByte < 7)
+                        {
+                            unsigned char temp2 = memory[loc + 1];
+                            unsigned char toWrite2 = memory[index + i] << (8 - xBit);
+                            memory[loc + 1] ^= toWrite2;
+                            if (temp2 & toWrite2)
+                            {
+                                registers[0xF] |= 1;
+                            }
+                        }
                     }
                 }
             }
