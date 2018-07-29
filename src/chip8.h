@@ -37,10 +37,13 @@ class chip8
         // Initialization of variables.
         bool init();
 
+        // Loads the supplied file as the ROM
         bool loadFile(const std::string& fileToLoad);
 
+        // Returns a pointer to the screen section of memory
         unsigned char* getScreen();
 
+        // Run one cycle of the VM
         bool runCycle();
 
     private:
@@ -78,6 +81,7 @@ class chip8
         // "Interrupt timers" that the CHIP-8 uses for delays and sound purposes.
         // These timers go off every 60Hz.  They are set to some value > 0, and count down to zero.
         // When the timer reaches zero, a delay or sound is triggered.
+        // TODO: ^^^ Not so sure this is correct ^^^
         unsigned char delayInterruptTimer;
         unsigned char soundInterruptTimer;
 
@@ -97,15 +101,19 @@ class chip8
 
         // Load ROM file into memory
         bool loadROM(std::ifstream * fin);
+
+        // What they say on the box
         bool fetch();
         bool decode();
         bool execute();
+
+        // OpCodes are 4 hex digits. Generally we want a subset of those digits.
         unsigned char getHexDigit1(unsigned short hexShort);
         unsigned char getHexDigit2(unsigned short hexShort);
         unsigned char getHexDigit3(unsigned short hexShort);
         unsigned char getHexDigit4(unsigned short hexShort);
         unsigned char getHexDigits3and4(unsigned short hexShort);
-        unsigned short getHexAddress(unsigned short hexShort);
+        unsigned short getHexAddress(unsigned short hexShort); // digits 2, 3, 4
 };
 
 #endif //IMIT8_CHIP8_CHIP8_H

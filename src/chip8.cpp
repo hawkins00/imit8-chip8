@@ -17,6 +17,8 @@ init()
 {
     //std::cout << "Initializing CPU..." << std::endl;
 
+    srand(time(NULL));
+
     for (int i = 0; i < NUMBER_OF_REGISTERS; ++i)
     {
         registers[i] = 0;
@@ -127,10 +129,12 @@ bool chip8::
 fetch()
 {
 //    if (progCounter >= CODE_START + romBytes || progCounter < CODE_START || progCounter % 2)
+    /*
     if (progCounter % 2)
     {
         return false;
     }
+     */
     opCode = memory[progCounter] << 8 | memory[progCounter + 1];
     return true;
 }
@@ -181,10 +185,12 @@ decode()
         case 0x1:
             progCounter = getHexAddress(opCode);
             // check segfault (is this necessary?) or odd address
+            /*
             if (progCounter < CODE_START || progCounter % 2)
             {
                 return false;
             }
+             */
             //std::cout << "GOTO: " << std::hex << progCounter << std::endl;
             break;
 
@@ -194,7 +200,7 @@ decode()
             progCounter = getHexAddress(opCode);
 
             // stack overflow or segfault or odd address
-            if (callStack.size() > STACK_DEPTH || progCounter < CODE_START || progCounter % 2)
+            if (callStack.size() > STACK_DEPTH || progCounter < CODE_START) // || progCounter % 2)
             {
                 return false;
             }
@@ -637,10 +643,8 @@ bool chip8::execute()
 {
     if (soundInterruptTimer > 0)
     {
-        /*
         if (soundInterruptTimer > 1)
-            beep();
-        */
+            std::cout << "beeping..." << std::endl;
         --soundInterruptTimer;
     }
     if (delayInterruptTimer > 0)
