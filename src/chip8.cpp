@@ -417,13 +417,20 @@ decode()
                 unsigned char h = getHexDigit4(opCode);
                 int xByte = x / 8;
                 int xBit = x % 8;
-                unsigned short start = SCREEN_START + xByte + (y * (SCREEN_WIDTH >> 3));
+                unsigned short start = SCREEN_START + xByte + y * SCREEN_WIDTH_SIZE;
                 //std::cout << std::dec << "x: " << (int)x << " y: " << (int)y << " h: " << (int)h << std::hex << " start: " << start << " index: " << index <<  std::endl;
                 if (xBit == 0) // Drawing to a single byte per line
                 {
-                    for (int i = 0; i < h && i + y < SCREEN_HEIGHT; ++i)
+                    for (int i = 0; i < h; ++i)
                     {
+                        unsigned short loc = (start + i * SCREEN_WIDTH_SIZE) % SCREEN_SIZE + SCREEN_START;
+                        /*
                         unsigned short loc = start + i * (SCREEN_WIDTH >> 3);
+                        if (loc > MEMORY_SIZE)
+                        {
+                            loc -= ((SCREEN_WIDTH * SCREEN_HEIGHT) >> 6);
+                        }
+                         */
                         unsigned char temp = memory[loc];
                         memory[loc] ^= memory[index + i];
                         if (temp & memory[loc])
@@ -434,9 +441,9 @@ decode()
                 }
                 else // Drawing to two bytes per line
                 {
-                    for (int i = 0; i < h && i + y < SCREEN_HEIGHT; ++i)
+                    for (int i = 0; i < h; ++i)
                     {
-                        unsigned short loc = start + i * (SCREEN_WIDTH >> 3);
+                        unsigned short loc = (start + i * SCREEN_WIDTH_SIZE) % SCREEN_SIZE + SCREEN_START;
                         unsigned char temp1 = memory[loc];
                         unsigned char toWrite1 = memory[index + i] >> xBit;
                         memory[loc] ^= toWrite1;
@@ -444,11 +451,21 @@ decode()
                         {
                             registers[0xF] |= 1;
                         }
-                        if (xByte < 7)
+                        if (xByte < 7) // Does not wrap horizontally
                         {
                             unsigned char temp2 = memory[loc + 1];
                             unsigned char toWrite2 = memory[index + i] << (8 - xBit);
                             memory[loc + 1] ^= toWrite2;
+                            if (temp2 & toWrite2)
+                            {
+                                registers[0xF] |= 1;
+                            }
+                        }
+                        else // Does wrap horizontally
+                        {
+                            unsigned char temp2 = memory[loc + 1 - 8];
+                            unsigned char toWrite2 = memory[index + i] << (8 - xBit);
+                            memory[loc + 1 - 8] ^= toWrite2;
                             if (temp2 & toWrite2)
                             {
                                 registers[0xF] |= 1;
