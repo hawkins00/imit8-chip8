@@ -15,7 +15,7 @@ chip8()
 bool chip8::
 init()
 {
-    //std::cout << "Initializing CPU..." << std::endl;
+    std::cout << "Initializing CPU..." << std::endl;
 
     srand(time(NULL));
 
@@ -24,10 +24,12 @@ init()
         registers[i] = 0;
     }
 
+    /*
     for (int i = 0; i < SCREEN_HEIGHT * SCREEN_WIDTH; ++i)
     {
         graphicsBuffer[i] = 0;
     }
+    */
 
     while (!callStack.empty())
     {
@@ -42,7 +44,7 @@ init()
 
     delayInterruptTimer = 0;
     index = 0;
-    opCode = 0;
+    opCode = opCodePrev = 0;
     progCounter = CODE_START;
     romBytes = 0;
     soundInterruptTimer = 0;
@@ -114,7 +116,7 @@ loadROM(std::ifstream* fin)
 unsigned char * chip8::
 getScreen()
 {
-    return &memory[SCREEN_START];
+    return graphicsBuffer;
 }
 
 // Run the next cycle
@@ -135,7 +137,11 @@ fetch()
         return false;
     }
      */
+    opCodePrev = opCode;
     opCode = memory[progCounter] << 8 | memory[progCounter + 1];
+//    std::cout << std::hex << (int)progCounter << " ops: " << (int)memory[progCounter] << " " << (int)memory[progCounter + 1] << std::endl;
+//    std::cout << std::hex << "ops (F2C): " << (int)memory[0xF2C] << " " << (int)memory[0xF2D] << std::endl;
+//    std::cout << "Fetching - PC: " << progCounter << " opCode: " << std::hex << opCode << std::endl;
     return true;
 }
 
@@ -154,12 +160,18 @@ decode()
                 // TODO
                 // clear the screen
                 case 0x0E0:
+                    for (int i = 0; i < SCREEN_HEIGHT * SCREEN_WIDTH; ++i)
+                    {
+                        graphicsBuffer[i] = 0;
+                    }
+                    /*
                     for (int i = SCREEN_START; i < MEMORY_SIZE; ++i)
                     {
                         memory[i] = 0;
                     }
+                    */
                     progCounter += 2;
-                    std::cout << "0x00E0: clear screen" << std::endl;
+                    //std::cout << "0x00E0: clear screen" << std::endl;
                     break;
                 // return from subroutine
                 case 0x0EE:
@@ -168,14 +180,16 @@ decode()
                         //std::cout << "0x00EE: call stack is empty" << std::endl;
                         exit(1);
                     }
+                    //std::cout << "0x00EE: progCounter: " << std::hex << progCounter << std::endl;
+                    //std::cout << "      : StackTop: " << std::hex << callStack.top() << std::endl;
                     progCounter = callStack.top() + 2;
                     callStack.pop();
-                    //std::cout << "0x00EE: return from subroutine" << std::endl;
+                    //std::cout << "0x00EE: return from subroutine, PC: " << std::hex << progCounter << std::endl;
                     break;
                 // call to address XXX
                 default:
-                    //std::cout << "0x0XXX: call to address XXX" << std::endl;
-                    //std::cout << "Not used in modern VMs" << std::endl;
+                    std::cout << "0x0XXX: call to address XXX" << std::endl;
+                    std::cout << "Not used in modern VMs" << std::endl;
                     return false;
                     //break;
             }
@@ -198,10 +212,12 @@ decode()
         case 0x2:
             callStack.push(progCounter);
             progCounter = getHexAddress(opCode);
+            //std::cout << "CALLING: " << std::hex << progCounter << std::endl;
 
             // stack overflow or segfault or odd address
             if (callStack.size() > STACK_DEPTH || progCounter < CODE_START) // || progCounter % 2)
             {
+                std::cout << "CRASHED CALL: " << std::hex << progCounter << std::endl;
                 return false;
             }
 
@@ -240,7 +256,7 @@ decode()
         case 0x5:
             if (getHexDigit4(opCode) != 0)
             {
-                //std::cout << "OpCode not implemented (" << std::hex << opCode << ")" << std::endl;
+                std::cout << "OpCode not implemented (" << std::hex << opCode << ")" << std::endl;
                 return false;
             }
 
@@ -308,7 +324,6 @@ decode()
                     unsigned char r = registers[getHexDigit2(opCode)];
                     unsigned char s = registers[getHexDigit3(opCode)];
                     registers[getHexDigit2(opCode)] += s;
-                    // TODO: VVV is r + s implicitly cast to a larger type so this works?
                     registers[0xF] = r > 0xFF - s ? 1 : 0; // carry bit
                     progCounter += 2;
                     //std::cout << "0x8RS4" << std::hex << opCode << std::endl;
@@ -321,7 +336,6 @@ decode()
                     unsigned char r = registers[getHexDigit2(opCode)];
                     unsigned char s = registers[getHexDigit3(opCode)];
                     registers[getHexDigit2(opCode)] -= s;
-                    // VVV Not sure if this is correct VVV
                     registers[0xF] = s > r ? 0 : 1; // carry (borrow) bit
                     progCounter += 2;
                     //std::cout << "0x8RS5" << std::hex << opCode << std::endl;
@@ -351,7 +365,7 @@ decode()
                     break;
                 }
 
-                // 0x8RSE (registers[R] = registers[S] << 1, updates carry (registers[0xF] = MSB))
+                // 0x8RSE (registersR] = registers[S] << 1, updates carry (registers[0xF] = MSB))
                 // TODO: This opCode is described at least three different ways in various sources,
                 //       not sure which is correct
                 case 0xE:
@@ -367,7 +381,7 @@ decode()
                 }
 
                 default:
-                    //std::cout << "OpCode not implemented (" << std::hex << opCode << ")" << std::endl;
+                    std::cout << "OpCode not implemented (" << std::hex << opCode << ")" << std::endl;
                     return false;
             }
             break;
@@ -376,7 +390,7 @@ decode()
         case 0x9:
             if (getHexDigit4(opCode) != 0)
             {
-                //std::cout << "OpCode not implemented (" << std::hex << opCode << ")" << std::endl;
+                std::cout << "OpCode not implemented (" << std::hex << opCode << ")" << std::endl;
                 return false;
             }
 
@@ -412,6 +426,7 @@ decode()
             //std::cout << "0xCXXX" << std::endl;
             break;
 
+        // FIXME: some ROMs only work on systems where vram is not part of the 4kb, so do that
         // 0xDXYH (draw an 8xH sprite at x = registers[X], y = registers[Y])
         case 0xD:
         {
@@ -423,13 +438,13 @@ decode()
                 unsigned char h = getHexDigit4(opCode);
                 int xByte = x / 8;
                 int xBit = x % 8;
-                unsigned short start = SCREEN_START + xByte + y * SCREEN_WIDTH_SIZE;
+                unsigned short start = xByte + y * SCREEN_WIDTH_SIZE;
                 //std::cout << std::dec << "x: " << (int)x << " y: " << (int)y << " h: " << (int)h << std::hex << " start: " << start << " index: " << index <<  std::endl;
                 if (xBit == 0) // Drawing to a single byte per line
                 {
                     for (int i = 0; i < h; ++i)
                     {
-                        unsigned short loc = (start + i * SCREEN_WIDTH_SIZE) % SCREEN_SIZE + SCREEN_START;
+                        unsigned short loc = (start + i * SCREEN_WIDTH_SIZE) % SCREEN_SIZE;
                         /*
                         unsigned short loc = start + i * (SCREEN_WIDTH >> 3);
                         if (loc > MEMORY_SIZE)
@@ -437,9 +452,9 @@ decode()
                             loc -= ((SCREEN_WIDTH * SCREEN_HEIGHT) >> 6);
                         }
                          */
-                        unsigned char temp = memory[loc];
-                        memory[loc] ^= memory[index + i];
-                        if (temp & memory[loc])
+                        unsigned char temp = graphicsBuffer[loc];
+                        graphicsBuffer[loc] ^= memory[index + i];
+                        if (temp & graphicsBuffer[loc])
                         {
                             registers[0xF] |= 1;
                         }
@@ -449,19 +464,19 @@ decode()
                 {
                     for (int i = 0; i < h; ++i)
                     {
-                        unsigned short loc = (start + i * SCREEN_WIDTH_SIZE) % SCREEN_SIZE + SCREEN_START;
-                        unsigned char temp1 = memory[loc];
+                        unsigned short loc = (start + i * SCREEN_WIDTH_SIZE) % SCREEN_SIZE;
+                        unsigned char temp1 = graphicsBuffer[loc];
                         unsigned char toWrite1 = memory[index + i] >> xBit;
-                        memory[loc] ^= toWrite1;
+                        graphicsBuffer[loc] ^= toWrite1;
                         if (temp1 & toWrite1)
                         {
                             registers[0xF] |= 1;
                         }
                         if (xByte < 7) // Does not wrap horizontally
                         {
-                            unsigned char temp2 = memory[loc + 1];
+                            unsigned char temp2 = graphicsBuffer[loc + 1];
                             unsigned char toWrite2 = memory[index + i] << (8 - xBit);
-                            memory[loc + 1] ^= toWrite2;
+                            graphicsBuffer[loc + 1] ^= toWrite2;
                             if (temp2 & toWrite2)
                             {
                                 registers[0xF] |= 1;
@@ -469,9 +484,9 @@ decode()
                         }
                         else // Does wrap horizontally
                         {
-                            unsigned char temp2 = memory[loc + 1 - 8];
+                            unsigned char temp2 = graphicsBuffer[loc + 1 - 8];
                             unsigned char toWrite2 = memory[index + i] << (8 - xBit);
-                            memory[loc + 1 - 8] ^= toWrite2;
+                            graphicsBuffer[loc + 1 - 8] ^= toWrite2;
                             if (temp2 & toWrite2)
                             {
                                 registers[0xF] |= 1;
@@ -515,7 +530,8 @@ decode()
 
                 // opCode is not implemented, so crash already
                 default:
-                    //std::cout << "OpCode not implemented (" << std::hex << opCode << ")" << std::endl;
+                    std::cout << "OpCode not implemented (" << std::hex << opCode << ")" << std::endl;
+                    //std::cout << "PC: " << std::hex << progCounter << std::endl;
                     return false;
             }
             break;
@@ -590,12 +606,12 @@ decode()
                 case 0x55:
                 {
                     int lastRegister = getHexDigit2(opCode);
-                    // FIXME: this causes segfaults, may just need other opCodes implemented
-                    // maybe good now ?
                     for (int i = 0; i <= lastRegister; ++i)
                     {
                         memory[index + i] = registers[i];
                     }
+                    // some sources say to do the next line, others say don't
+                    // index += lastRegister + 1;
                     progCounter += 2;
                     //std::cout << "0xFR55: Write regs[0-R] at index" << std::endl;
                     break;
@@ -605,8 +621,6 @@ decode()
                 case 0x65:
                 {
                     int lastRegister = getHexDigit2(opCode);
-                    // FIXME: this causes segfaults, may just need other opCodes implemented
-                    // maybe good now ?
                     for (int i = 0; i <= lastRegister; ++i)
                     {
                         registers[i] = memory[index + i];
@@ -618,22 +632,19 @@ decode()
 
                 // opCode is not implemented, so crash already
                 default:
-                    //std::cout << "OpCode not implemented (" << std::hex << opCode << ")" << std::endl;
+                    std::cout << "OpCode not implemented (" << std::hex << opCode << ")" << std::endl;
                     return false;
             }
             break;
 
         default:
         {
-            /* FIXME: this should stop execution once all opCodes are implemented
-               just a catch for non-implemented opCodes */
-            //progCounter += 2;
+            std::cout << "OpCode not implemented (" << std::hex << opCode << ")" << std::endl;
             return false;
-            //std::cout << "default" << std::endl;
         }
     }
 
-    //std::cout << "PC: " << std::hex << progCounter << std::endl;
+    //std::cout << "PC: " << std::hex << progCounter << " OpCode: " << opCode << std::endl;
     return true;
 }
 

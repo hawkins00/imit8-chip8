@@ -24,7 +24,7 @@
 #define FONT_SIZE 80
 #define BYTES_PER_FONT_CHAR static_cast<unsigned char>(0x5)
 #define CODE_START static_cast<unsigned short>(0x200)
-#define SCREEN_START static_cast<unsigned short>(0xF00)
+//#define SCREEN_START static_cast<unsigned short>(0xF00)
 
 
 class chip8
@@ -62,11 +62,12 @@ class chip8
         // Program counter.
         unsigned short progCounter;
 
-        // Used to store the current opCode to be processed.
+        // Used to store the current opCode to be processed & previous.
         unsigned short opCode;
+        unsigned short opCodePrev;
 
         // Used to simulate VRAM, this is the buffer that gets written to the display.
-        unsigned char graphicsBuffer[SCREEN_HEIGHT * SCREEN_WIDTH];
+        unsigned char graphicsBuffer[SCREEN_HEIGHT * SCREEN_WIDTH]{0};
 
         // Font to store in memory (0-F)
         unsigned char font[FONT_SIZE] = {0xF0, 0x90, 0x90, 0x90, 0xF0, 0x20, 0x60, 0x20, 0x20, 0x70,
