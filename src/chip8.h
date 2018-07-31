@@ -105,8 +105,8 @@ class chip8
 
         // What they say on the box
         bool fetch();
-        bool decode();
-        bool execute();
+        bool decodeAndExecute();
+        bool postExecute();
 
         // OpCodes are 4 hex digits. Generally we want a subset of those digits.
         unsigned char getHexDigit1(unsigned short hexShort);

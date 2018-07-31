@@ -123,7 +123,7 @@ getScreen()
 bool chip8::
 runCycle()
 {
-    return fetch() && decode() && execute();
+    return fetch() && decodeAndExecute() && postExecute();
 }
 
 // Fetch the next opCode
@@ -145,11 +145,9 @@ fetch()
     return true;
 }
 
-// TODO: A whole bunch o' opCodes
-// TODO: Maybe combine into decodeAndExecute()
-// Decode the fetched opCode
+// Decode the fetched opCode and execute it
 bool chip8::
-decode()
+decodeAndExecute()
 {
     switch (getHexDigit1(opCode))
     {
@@ -157,23 +155,17 @@ decode()
         case 0x0:
             switch (getHexAddress(opCode))
             {
-                // TODO
-                // clear the screen
+                // 0x00E0 (clear the screen)
                 case 0x0E0:
                     for (int i = 0; i < SCREEN_HEIGHT * SCREEN_WIDTH; ++i)
                     {
                         graphicsBuffer[i] = 0;
                     }
-                    /*
-                    for (int i = SCREEN_START; i < MEMORY_SIZE; ++i)
-                    {
-                        memory[i] = 0;
-                    }
-                    */
                     progCounter += 2;
                     //std::cout << "0x00E0: clear screen" << std::endl;
                     break;
-                // return from subroutine
+
+                // 0x00EE (return from subroutine)
                 case 0x0EE:
                     if (callStack.empty())
                     {
@@ -186,25 +178,18 @@ decode()
                     callStack.pop();
                     //std::cout << "0x00EE: return from subroutine, PC: " << std::hex << progCounter << std::endl;
                     break;
+
                 // call to address XXX
                 default:
                     std::cout << "0x0XXX: call to address XXX" << std::endl;
                     std::cout << "Not used in modern VMs" << std::endl;
                     return false;
-                    //break;
             }
             break;
 
         // 0x1XXX (goto)
         case 0x1:
             progCounter = getHexAddress(opCode);
-            // check segfault (is this necessary?) or odd address
-            /*
-            if (progCounter < CODE_START || progCounter % 2)
-            {
-                return false;
-            }
-             */
             //std::cout << "GOTO: " << std::hex << progCounter << std::endl;
             break;
 
@@ -212,12 +197,11 @@ decode()
         case 0x2:
             callStack.push(progCounter);
             progCounter = getHexAddress(opCode);
-            //std::cout << "CALLING: " << std::hex << progCounter << std::endl;
 
-            // stack overflow or segfault or odd address
-            if (callStack.size() > STACK_DEPTH || progCounter < CODE_START) // || progCounter % 2)
+            // stack overflow
+            if (callStack.size() > STACK_DEPTH)
             {
-                std::cout << "CRASHED CALL: " << std::hex << progCounter << std::endl;
+                std::cout << "Stack Overflow: " << std::hex << progCounter << std::endl;
                 return false;
             }
 
@@ -342,14 +326,15 @@ decode()
                     break;
                 }
 
-                // 0x8RS6 (registers[R] = registers[S] >> 1, updates carry (registers[0xF] = LSB))
+                // 0x8RX6 (registers[R] >>= 1, registers[0xF] = LSB)
+                // Wikipedia info on this opCode is incorrect
                 case 0x6:
                 {
-                    unsigned char s = registers[getHexDigit3(opCode)];
-                    registers[getHexDigit2(opCode)] = s >> 1;
-                    registers[0xF] = s & 1;
+                    unsigned char r = registers[getHexDigit2(opCode)];
+                    registers[0xF] = r & 0x1;
+                    registers[getHexDigit2(opCode)] = r >> 1;
                     progCounter += 2;
-                    //std::cout << "0x8RS6" << std::hex << opCode << std::endl;
+                    //std::cout << "0x8RX6" << std::hex << opCode << std::endl;
                     break;
                 }
 
@@ -365,16 +350,13 @@ decode()
                     break;
                 }
 
-                // 0x8RSE (registersR] = registers[S] << 1, updates carry (registers[0xF] = MSB))
-                // TODO: This opCode is described at least three different ways in various sources,
-                //       not sure which is correct
+                // 0x8RXE (registers[R] <<= 1, registers[0xF] = MSB)
+                // Wikipedia info on this opCode is incorrect
                 case 0xE:
                 {
-                    unsigned char s = registers[getHexDigit3(opCode)];
-                    registers[0xF] = s >> 7;
-                    s <<= 1;
-                    registers[getHexDigit2(opCode)] = s;
-                    //registers[getHexDigit3(opCode)] = s;
+                    unsigned char r = registers[getHexDigit2(opCode)];
+                    registers[0xF] = r >> 7;
+                    registers[getHexDigit2(opCode)] = r << 1;
                     progCounter += 2;
                     //std::cout << "0x8RSE" << std::hex << opCode << std::endl;
                     break;
@@ -454,9 +436,9 @@ decode()
                          */
                         unsigned char temp = graphicsBuffer[loc];
                         graphicsBuffer[loc] ^= memory[index + i];
-                        if (temp & graphicsBuffer[loc])
+                        if (temp & memory[index + i])
                         {
-                            registers[0xF] |= 1;
+                            registers[0xF] = 1;
                         }
                     }
                 }
@@ -470,7 +452,7 @@ decode()
                         graphicsBuffer[loc] ^= toWrite1;
                         if (temp1 & toWrite1)
                         {
-                            registers[0xF] |= 1;
+                            registers[0xF] = 1;
                         }
                         if (xByte < 7) // Does not wrap horizontally
                         {
@@ -479,7 +461,7 @@ decode()
                             graphicsBuffer[loc + 1] ^= toWrite2;
                             if (temp2 & toWrite2)
                             {
-                                registers[0xF] |= 1;
+                                registers[0xF] = 1;
                             }
                         }
                         else // Does wrap horizontally
@@ -489,7 +471,7 @@ decode()
                             graphicsBuffer[loc + 1 - 8] ^= toWrite2;
                             if (temp2 & toWrite2)
                             {
-                                registers[0xF] |= 1;
+                                registers[0xF] = 1;
                             }
                         }
                     }
@@ -648,9 +630,9 @@ decode()
     return true;
 }
 
-// TODO: Combine with decode() ?, these should be 60Hz regardless of main loop
-// Execute the decoded operation
-bool chip8::execute()
+// Post execution updates (sound and delay timers)
+bool chip8::
+postExecute()
 {
     if (soundInterruptTimer > 0)
     {
