@@ -24,12 +24,10 @@ init()
         registers[i] = 0;
     }
 
-    /*
     for (int i = 0; i < SCREEN_HEIGHT * SCREEN_WIDTH; ++i)
     {
         graphicsBuffer[i] = 0;
     }
-    */
 
     while (!callStack.empty())
     {
@@ -48,7 +46,7 @@ init()
     progCounter = CODE_START;
     romBytes = 0;
     soundInterruptTimer = 0;
-
+    isDirty = false;
 
     //std::cout << "Done initializing CPU..." << std::endl;
     return true;
@@ -123,6 +121,7 @@ getScreen()
 bool chip8::
 runCycle()
 {
+    isDirty = false;
     return fetch() && decodeAndExecute() && postExecute();
 }
 
@@ -162,6 +161,7 @@ decodeAndExecute()
                         graphicsBuffer[i] = 0;
                     }
                     progCounter += 2;
+                    isDirty = true;
                     //std::cout << "0x00E0: clear screen" << std::endl;
                     break;
 
@@ -189,9 +189,18 @@ decodeAndExecute()
 
         // 0x1XXX (goto)
         case 0x1:
+        {
+            unsigned short prevProgramCounter = progCounter;
             progCounter = getHexAddress(opCode);
+            // if in a single-instruction goto loop, may as well end computation
+            if (progCounter == prevProgramCounter)
+            {
+                std::cerr << "Execution ended due to GOTO loop (" << std::hex << opCode << ")" << std::endl;
+                return false;
+            }
             //std::cout << "GOTO: " << std::hex << progCounter << std::endl;
             break;
+        }
 
         // 0x2XXX (subroutine call)
         case 0x2:
@@ -436,7 +445,7 @@ decodeAndExecute()
                          */
                         unsigned char temp = graphicsBuffer[loc];
                         graphicsBuffer[loc] ^= memory[index + i];
-                        if (temp & memory[index + i])
+                        if (temp & ~graphicsBuffer[loc])
                         {
                             registers[0xF] = 1;
                         }
@@ -450,7 +459,7 @@ decodeAndExecute()
                         unsigned char temp1 = graphicsBuffer[loc];
                         unsigned char toWrite1 = memory[index + i] >> xBit;
                         graphicsBuffer[loc] ^= toWrite1;
-                        if (temp1 & toWrite1)
+                        if (temp1 & ~graphicsBuffer[loc])
                         {
                             registers[0xF] = 1;
                         }
@@ -459,7 +468,7 @@ decodeAndExecute()
                             unsigned char temp2 = graphicsBuffer[loc + 1];
                             unsigned char toWrite2 = memory[index + i] << (8 - xBit);
                             graphicsBuffer[loc + 1] ^= toWrite2;
-                            if (temp2 & toWrite2)
+                            if (temp2 & ~graphicsBuffer[loc + 1])
                             {
                                 registers[0xF] = 1;
                             }
@@ -469,7 +478,7 @@ decodeAndExecute()
                             unsigned char temp2 = graphicsBuffer[loc + 1 - 8];
                             unsigned char toWrite2 = memory[index + i] << (8 - xBit);
                             graphicsBuffer[loc + 1 - 8] ^= toWrite2;
-                            if (temp2 & toWrite2)
+                            if (temp2 & ~graphicsBuffer[loc + 1 - 8])
                             {
                                 registers[0xF] = 1;
                             }
@@ -478,6 +487,7 @@ decodeAndExecute()
                 }
             }
             progCounter += 2;
+            isDirty = true;
             //std::cout << "0xDXYH - Draw: " << std::hex << opCode << std::endl;
             break;
         }
@@ -682,5 +692,11 @@ unsigned short chip8::
 getHexAddress(unsigned short hexShort)
 {
     return hexShort & 0x0FFF;
+}
+
+bool chip8::
+isDirtyScreen()
+{
+    return isDirty;
 }
 

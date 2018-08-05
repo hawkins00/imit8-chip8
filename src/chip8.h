@@ -46,6 +46,9 @@ class chip8
         // Run one cycle of the VM
         bool runCycle();
 
+        // Does the screen need to be drawn?
+        bool isDirtyScreen();
+
     private:
 
         // Simulates the system memory (RAM).  This should probably
@@ -67,7 +70,7 @@ class chip8
         unsigned short opCodePrev;
 
         // Used to simulate VRAM, this is the buffer that gets written to the display.
-        unsigned char graphicsBuffer[SCREEN_HEIGHT * SCREEN_WIDTH]{0};
+        unsigned char graphicsBuffer[SCREEN_HEIGHT * SCREEN_WIDTH];
 
         // Font to store in memory (0-F)
         unsigned char font[FONT_SIZE] = {0xF0, 0x90, 0x90, 0x90, 0xF0, 0x20, 0x60, 0x20, 0x20, 0x70,
@@ -96,6 +99,8 @@ class chip8
 
         // size of loaded ROM in bytes
         unsigned short romBytes;
+
+        bool isDirty;
 
         // Load font into memory
         bool loadFontSet();
