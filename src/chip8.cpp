@@ -122,25 +122,18 @@ bool chip8::
 runCycle()
 {
     isDirty = false;
-    return fetch() && decodeAndExecute() && postExecute();
+    return fetch() && decodeAndExecute();
 }
 
 // Fetch the next opCode
 bool chip8::
 fetch()
 {
-//    if (progCounter >= CODE_START + romBytes || progCounter < CODE_START || progCounter % 2)
-    /*
-    if (progCounter % 2)
-    {
-        return false;
-    }
-     */
     opCodePrev = opCode;
     opCode = memory[progCounter] << 8 | memory[progCounter + 1];
-//    std::cout << std::hex << (int)progCounter << " ops: " << (int)memory[progCounter] << " " << (int)memory[progCounter + 1] << std::endl;
-//    std::cout << std::hex << "ops (F2C): " << (int)memory[0xF2C] << " " << (int)memory[0xF2D] << std::endl;
-//    std::cout << "Fetching - PC: " << progCounter << " opCode: " << std::hex << opCode << std::endl;
+    //std::cout << std::hex << (int)progCounter << " ops: " << (int)memory[progCounter] << " " << (int)memory[progCounter + 1] << std::endl;
+    //std::cout << std::hex << "ops (F2C): " << (int)memory[0xF2C] << " " << (int)memory[0xF2D] << std::endl;
+    //std::cout << "Fetching - PC: " << progCounter << " opCode: " << std::hex << opCode << std::endl;
     return true;
 }
 
@@ -170,7 +163,7 @@ decodeAndExecute()
                     if (callStack.empty())
                     {
                         //std::cout << "0x00EE: call stack is empty" << std::endl;
-                        exit(1);
+                        exit(3);
                     }
                     //std::cout << "0x00EE: progCounter: " << std::hex << progCounter << std::endl;
                     //std::cout << "      : StackTop: " << std::hex << callStack.top() << std::endl;
@@ -640,9 +633,9 @@ decodeAndExecute()
     return true;
 }
 
-// Post execution updates (sound and delay timers)
+// Update timers @ 60 Hz
 bool chip8::
-postExecute()
+updateTimers()
 {
     if (soundInterruptTimer > 0)
     {

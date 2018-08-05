@@ -49,6 +49,9 @@ class chip8
         // Does the screen need to be drawn?
         bool isDirtyScreen();
 
+        // Update timers
+        bool updateTimers();
+
     private:
 
         // Simulates the system memory (RAM).  This should probably
@@ -111,7 +114,6 @@ class chip8
         // What they say on the box
         bool fetch();
         bool decodeAndExecute();
-        bool postExecute();
 
         // OpCodes are 4 hex digits. Generally we want a subset of those digits.
         unsigned char getHexDigit1(unsigned short hexShort);
