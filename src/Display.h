@@ -19,12 +19,14 @@ class Display
         int height;
         int width;
         unsigned char * screen;
+        std::string frame;
 
         int getHeight() const;
         void setHeight(int height);
         int getWidth() const;
         void setWidth(int width);
         void printChar(unsigned char toPrint);
+        void clearFrame();
 };
 
 #endif //IMIT8_CHIP8_DISPLAY_H

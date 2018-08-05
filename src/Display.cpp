@@ -5,18 +5,20 @@
 
 #include "Display.h"
 
-Display::Display(unsigned char * screen, unsigned short height, unsigned short width)
+Display::
+Display(unsigned char * screen, unsigned short height, unsigned short width)
 {
     setHeight(height);
     setWidth(width);
+    clearFrame();
     Display::screen = screen;
-    std::cout << "Display was initialized with height: " << height << " and a width: " << width << " value." << std::endl;
+    std::clog << "Display was initialized with height: " << height << " and width: " << width << std::endl;
 }
 
 
-void Display::drawDisplay()
+void Display::
+drawDisplay()
 {
-    std::cout << std::endl;
     for(int row = 0; row < getHeight(); ++row)
     {
         for(int columnOf8 = 0; columnOf8 < getWidth() / 8; ++columnOf8)
@@ -24,54 +26,69 @@ void Display::drawDisplay()
             printChar(screen[row * 8 + columnOf8]);
             if((columnOf8+1) % 8 == 0)
             {
-                std::cout << std::endl;
+                frame += '\n';
             }
         }
     }
+
+    std::cout << frame << std::endl;
+    std::flush(std::cout);
+    clearFrame();
 }
 
-void Display::clearScreen()
+void Display::
+clearScreen()
 {
     #ifdef WINDOWS
-        //std::cout << "assuming windows";
+        // assuming windows
         std::system("cls");
     #else
-        //std::cout << "assuming linux";
+        // assuming linux
         std::system("clear");
     #endif
 }
 
-void Display::printChar(unsigned char toPrint)
+void Display::
+printChar(unsigned char toPrint)
 {
     for(int i = 0; i < 8; ++i)
     {
-        if(toPrint & (128 >> i))
+        if(toPrint & (0x80 >> i))
         {
-            std::cout << "█"; //█▀
+            frame += "▀"; //█▀
         }
         else
         {
-            std::cout << " ";
+            frame += " ";
         }
     }
 }
 
-int Display::getHeight() const
+int Display::
+getHeight() const
 {
     return height;
 }
 
-void Display::setHeight(int height)
+void Display::
+setHeight(int height)
 {
     Display::height = height;
 }
 
-int Display::getWidth() const
+int Display::
+getWidth() const
 {
     return width;
 }
 
-void Display::setWidth(int width)
+void Display::
+setWidth(int width)
 {
     Display::width = width;
+}
+
+void Display::clearFrame()
+{
+    frame = "";
 }
