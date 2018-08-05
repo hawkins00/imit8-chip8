@@ -44,7 +44,7 @@ setOutputFileName(const std::string& outputFileName)
 bool logWriter::
 openFile(std::string fileToOpen)
 {
-    outputStream.open(fileToOpen, std::ios_base::app);
+    outputStream.open(fileToOpen, std::ofstream::app);
     return outputStream.good();
 }
 
@@ -60,13 +60,13 @@ writeToFile(std::string levelOfMessage, std::string& stringToWriteToLogfile)
 {
     if (outputStream.is_open() && outputStream.good())
     {
-        // TODO:  Print timestamp on logs.
         outputStream.write("[", 1);
         outputStream.write(levelOfMessage.c_str(), levelOfMessage.length());
-        outputStream.write("]   ", 4);
-
+        outputStream.write("]  ", 3);
+        // TODO:  Print timestamp on logs.
         outputStream.write(stringToWriteToLogfile.c_str(), stringToWriteToLogfile.length());
         outputStream.write("\n", 1);
+        outputStream.flush();
         return true;
     }
 
