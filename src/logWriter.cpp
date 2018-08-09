@@ -8,9 +8,7 @@
 logWriter::
 logWriter()
 {
-    std::cout
-            << "logWriter was instantiated without a file name.  Using \"log.txt\" and ERROR as the default logging level."
-            << std::endl;
+    std::cout << "logWriter was instantiated without a file name.  Using \"log.txt\" and ERROR as the maximum logging level." << std::endl;
     logWriter("log.txt", logLevel::level::ERROR);
 }
 
@@ -60,17 +58,19 @@ writeToFile(std::string levelOfMessage, std::string& stringToWriteToLogfile)
 {
     if (outputStream.is_open() && outputStream.good())
     {
-        outputStream.write("[", 1);
+        time_t now = time(NULL);
+        std::string logTime = ctime(&now);
+        outputStream.write(logTime.c_str(), logTime.length() - 1); // for some reason this adds a newline character, so -1
+        outputStream.write("  [", 3);
         outputStream.write(levelOfMessage.c_str(), levelOfMessage.length());
         outputStream.write("]  ", 3);
-        // TODO:  Print timestamp on logs.
         outputStream.write(stringToWriteToLogfile.c_str(), stringToWriteToLogfile.length());
         outputStream.write("\n", 1);
         outputStream.flush();
         return true;
     }
 
-    std::cout << "ERROR:  Writing to file failed, outputStream is not open for writing." << std::endl;
+    std::cerr<< "ERROR:  Writing to file failed, outputStream is not open for writing." << std::endl;
     return false;
 }
 
