@@ -3,4 +3,4 @@ project(imit8_chip8)
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_executable(imit8_chip8 src/main.cpp src/chip8.cpp src/chip8.h src/logWriter.cpp src/logWriter.h src/Display.cpp src/Display.h)
+add_executable(imit8_chip8 src/main.cpp src/Chip8.cpp src/Chip8.h src/LogWriter.cpp src/LogWriter.h src/Display.cpp src/Display.h)
