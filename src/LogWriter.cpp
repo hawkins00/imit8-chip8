@@ -1,19 +1,26 @@
-/*
+/**
+ * Copyright (c) 2018 Chris Kim & Matt Hawkins
+ * This program is licensed under the "GPLv3 License"
+ * Please see the file License.md in the source
+ * distribution of this software for license terms.
+ */
+
+ /*
  * logWriter
  * "It writes logs."
  */
 
-#include "logWriter.h"
+#include "LogWriter.h"
 
-logWriter::
-logWriter()
+LogWriter::
+LogWriter()
 {
     std::cout << "logWriter was instantiated without a file name.  Using \"log.txt\" and ERROR as the maximum logging level." << std::endl;
-    logWriter("log.txt", logLevel::level::ERROR);
+    LogWriter("log.txt", LogLevel::Level::ERROR);
 }
 
-logWriter::
-logWriter(std::string fileToOpen, logLevel::level level)
+LogWriter::
+LogWriter(std::string fileToOpen, LogLevel::Level level)
 {
     std::cout << "Using \"" << fileToOpen << "\" as the log file." << std::endl;
     setOutputFileName("./" + fileToOpen);
@@ -21,39 +28,39 @@ logWriter(std::string fileToOpen, logLevel::level level)
     openFile(outputFileName);
 }
 
-logWriter::
-~logWriter()
+LogWriter::
+~LogWriter()
 {
     closeFile();
 }
 
-std::string& logWriter::
+std::string& LogWriter::
 getOutputFileName()
 {
     return outputFileName;
 }
 
-void logWriter::
+void LogWriter::
 setOutputFileName(const std::string& outputFileName)
 {
-    logWriter::outputFileName = outputFileName;
+    LogWriter::outputFileName = outputFileName;
 }
 
-bool logWriter::
+bool LogWriter::
 openFile(std::string fileToOpen)
 {
     outputStream.open(fileToOpen, std::ofstream::app);
     return outputStream.good();
 }
 
-bool logWriter::
+bool LogWriter::
 closeFile()
 {
     outputStream.close();
     return true;
 }
 
-bool logWriter::
+bool LogWriter::
 writeToFile(std::string levelOfMessage, std::string& stringToWriteToLogfile)
 {
     if (outputStream.is_open() && outputStream.good())
@@ -74,24 +81,24 @@ writeToFile(std::string levelOfMessage, std::string& stringToWriteToLogfile)
     return false;
 }
 
-bool logWriter::
-log(logLevel::level levelOfMessage, std::string stringToWrite)
+bool LogWriter::
+log(LogLevel::Level levelOfMessage, std::string stringToWrite)
 {
     if (levelOfMessage <= getCurrentLoggingLevel())
     {
-        return writeToFile(logLevel::to_string(levelOfMessage), stringToWrite);
+        return writeToFile(LogLevel::to_string(levelOfMessage), stringToWrite);
     }
     return false;
 }
 
-logWriter::logLevel::level logWriter::
+LogWriter::LogLevel::Level LogWriter::
 getCurrentLoggingLevel() const
 {
     return currentLoggingLevel;
 }
 
-void logWriter::
-setCurrentLoggingLevel(logWriter::logLevel::level currentLoggingLevel)
+void LogWriter::
+setCurrentLoggingLevel(LogWriter::LogLevel::Level currentLoggingLevel)
 {
-    logWriter::currentLoggingLevel = currentLoggingLevel;
+    LogWriter::currentLoggingLevel = currentLoggingLevel;
 }

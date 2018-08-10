@@ -1,32 +1,40 @@
-/*
+/**
+ * Copyright (c) 2018 Chris Kim & Matt Hawkins
+ * This program is licensed under the "GPLv3 License"
+ * Please see the file License.md in the source
+ * distribution of this software for license terms.
+ */
+
+ /*
  * Chip8
  * Implementation of the Chip-8 CPU Core.
  */
 
-#include "chip8.h"
+#include "Chip8.h"
+#include "LogWriter.h"
 
-chip8::
-chip8()
+Chip8::
+Chip8()
 {
-    //std::cout << "Creating CHIP-8 CPU..." << std::endl;
+    //logWriter.log(logWriter::logLevel::INFO, "Creating CHIP-8 CPU...");
     init();
 }
 
-bool chip8::
+bool Chip8::
 init()
 {
     std::cout << "Initializing CPU..." << std::endl;
 
-    srand(time(NULL));
+    srand(static_cast<unsigned int>(time(nullptr)));
 
-    for (int i = 0; i < NUMBER_OF_REGISTERS; ++i)
+    for (unsigned char& i : registers)
     {
-        registers[i] = 0;
+        i = 0;
     }
 
-    for (int i = 0; i < SCREEN_HEIGHT * SCREEN_WIDTH; ++i)
+    for (unsigned char& i : graphicsBuffer)
     {
-        graphicsBuffer[i] = 0;
+        i = 0;
     }
 
     while (!callStack.empty())
@@ -42,7 +50,7 @@ init()
 
     delayInterruptTimer = 0;
     index = 0;
-    opCode = opCodePrev = 0;
+    opCode = 0;
     progCounter = CODE_START;
     romBytes = 0;
     soundInterruptTimer = 0;
@@ -54,7 +62,7 @@ init()
 
 
 // Load game file into memory at 0x200 (decimal 512)
-bool chip8::
+bool Chip8::
 loadFile(const std::string& fileToLoad)
 {
     //std::cout << "Reading CHIP-8 ROM '" << fileToLoad << "'..." << std::endl;
@@ -74,14 +82,14 @@ loadFile(const std::string& fileToLoad)
 }
 
 // Copy font to first 80 memory locations
-bool chip8::
+bool Chip8::
 loadFontSet()
 {
     std::copy_n(font, FONT_SIZE, memory);
     return true;
 }
 
-bool chip8::
+bool Chip8::
 loadROM(std::ifstream* fin)
 {
     char op;
@@ -111,14 +119,14 @@ loadROM(std::ifstream* fin)
 }
 
 // Get the starting location of vram
-unsigned char * chip8::
+unsigned char* Chip8::
 getScreen()
 {
     return graphicsBuffer;
 }
 
 // Run the next cycle
-bool chip8::
+bool Chip8::
 runCycle()
 {
     isDirty = false;
@@ -126,10 +134,9 @@ runCycle()
 }
 
 // Fetch the next opCode
-bool chip8::
+bool Chip8::
 fetch()
 {
-    opCodePrev = opCode;
     opCode = memory[progCounter] << 8 | memory[progCounter + 1];
     //std::cout << std::hex << (int)progCounter << " ops: " << (int)memory[progCounter] << " " << (int)memory[progCounter + 1] << std::endl;
     //std::cout << std::hex << "ops (F2C): " << (int)memory[0xF2C] << " " << (int)memory[0xF2D] << std::endl;
@@ -138,7 +145,7 @@ fetch()
 }
 
 // Decode the fetched opCode and execute it
-bool chip8::
+bool Chip8::
 decodeAndExecute()
 {
     switch (getHexDigit1(opCode))
@@ -149,9 +156,9 @@ decodeAndExecute()
             {
                 // 0x00E0 (clear the screen)
                 case 0x0E0:
-                    for (int i = 0; i < SCREEN_HEIGHT * SCREEN_WIDTH; ++i)
+                    for (unsigned char& i : graphicsBuffer)
                     {
-                        graphicsBuffer[i] = 0;
+                        i = 0;
                     }
                     progCounter += 2;
                     isDirty = true;
@@ -634,7 +641,7 @@ decodeAndExecute()
 }
 
 // Update timers @ 60 Hz
-bool chip8::
+bool Chip8::
 updateTimers()
 {
     if (soundInterruptTimer > 0)
@@ -651,43 +658,43 @@ updateTimers()
     return true;
 }
 
-unsigned char chip8::
+unsigned char Chip8::
 getHexDigit1(unsigned short hexShort)
 {
     return hexShort >> 12;
 }
 
-unsigned char chip8::
+unsigned char Chip8::
 getHexDigit2(unsigned short hexShort)
 {
     return (hexShort >> 8) & 0xF;
 }
 
-unsigned char chip8::
+unsigned char Chip8::
 getHexDigit3(unsigned short hexShort)
 {
     return (hexShort >> 4) & 0xF;
 }
 
-unsigned char chip8::
+unsigned char Chip8::
 getHexDigit4(unsigned short hexShort)
 {
     return hexShort & 0x000F;
 }
 
-unsigned char chip8::
+unsigned char Chip8::
 getHexDigits3and4(unsigned short hexShort)
 {
     return hexShort & 0x00FF;
 }
 
-unsigned short chip8::
+unsigned short Chip8::
 getHexAddress(unsigned short hexShort)
 {
     return hexShort & 0x0FFF;
 }
 
-bool chip8::
+bool Chip8::
 isDirtyScreen()
 {
     return isDirty;

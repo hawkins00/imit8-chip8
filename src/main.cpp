@@ -1,31 +1,39 @@
+/**
+ * Copyright (c) 2018 Chris Kim & Matt Hawkins
+ * This program is licensed under the "GPLv3 License"
+ * Please see the file License.md in the source
+ * distribution of this software for license terms.
+ */
+
 #include <algorithm>
 #include <iostream>
 #include <unistd.h>
 #include <thread>
-#include "chip8.h"
+#include "Chip8.h"
 #include "Display.h"
-#include "logWriter.h"
+#include "LogWriter.h"
 
 using namespace std::chrono;
-
-#define USECONDS_PER_FRAME (1000000 / 60)
-#define OPCODES_PER_FRAME 10
+#define OPCODES_PER_SECOND 600
+#define FRAMES_PER_SECOND 60
+#define OPCODES_PER_FRAME (OPCODES_PER_SECOND / FRAMES_PER_SECOND)
+const microseconds USECONDS_PER_FRAME = microseconds(1000000 / FRAMES_PER_SECOND);
 
 int main(int argc, char* argv[])
 {
     Display::clearScreen();
-    logWriter LogWriter("DEBUG_LOG.txt", logWriter::logLevel::INFO);
+    LogWriter LogWriter("DEBUG_LOG.txt", LogWriter::LogLevel::INFO);
 
     // check for correct num of args
     if (argc != 2)
     {
-        LogWriter.log(logWriter::logLevel::ERROR, "No input program file provided. Exiting.");
+        LogWriter.log(LogWriter::LogLevel::ERROR, "No input program file provided. Exiting.");
         std::cerr << "ERROR: No input program file provided." << std::endl;
         std::cerr << "Usage: imit8-chip8 dir/filename.ext" << std::endl;
         exit(1);
     }
 
-    chip8 cpu0;
+    Chip8 cpu0;
     Display screen(cpu0.getScreen()); // create display and give access to vram
 
     // load the ROM file
@@ -34,7 +42,7 @@ int main(int argc, char* argv[])
         std::string loadFileFail = "ROM file (";
         loadFileFail += argv[1];
         loadFileFail += ") could not be loaded. Exiting.";
-        LogWriter.log(logWriter::logLevel::ERROR, loadFileFail);
+        LogWriter.log(LogWriter::LogLevel::ERROR, loadFileFail);
         exit(2);
     }
     else
@@ -42,7 +50,7 @@ int main(int argc, char* argv[])
         std::string loadFile = "ROM file (";
         loadFile += argv[1];
         loadFile += ") successfully loaded.";
-        LogWriter.log(logWriter::logLevel::INFO, loadFile);
+        LogWriter.log(LogWriter::LogLevel::INFO, loadFile);
     }
 
     bool isRunning = true;
@@ -72,11 +80,11 @@ int main(int argc, char* argv[])
 
         // sleep to ensure screen updates occur at 60 Hz
         microseconds frameEnd = duration_cast<microseconds>(system_clock::now().time_since_epoch());
-        long int diff = frameEnd.count() - frameStart.count();
-        std::this_thread::sleep_for(microseconds(USECONDS_PER_FRAME - diff));
+        microseconds diff = frameEnd - frameStart;
+        std::this_thread::sleep_for(USECONDS_PER_FRAME - diff);
     }
 
-    LogWriter.log(logWriter::logLevel::INFO, "Program loop exited. Shutting down.");
+    LogWriter.log(LogWriter::LogLevel::INFO, "Program loop exited. Shutting down.");
 
     return 0;
 }

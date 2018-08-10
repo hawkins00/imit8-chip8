@@ -1,4 +1,11 @@
-/*
+/**
+ * Copyright (c) 2018 Chris Kim & Matt Hawkins
+ * This program is licensed under the "GPLv3 License"
+ * Please see the file License.md in the source
+ * distribution of this software for license terms.
+ */
+
+ /*
  * Chip8
  * Implementation of the Chip-8 CPU Core.
  */
@@ -22,17 +29,15 @@
 #define STACK_DEPTH 16
 #define NUMBER_OF_KEYPAD_BUTTONS 16
 #define FONT_SIZE 80
-#define BYTES_PER_FONT_CHAR static_cast<unsigned char>(0x5)
-#define CODE_START static_cast<unsigned short>(0x200)
-//#define SCREEN_START static_cast<unsigned short>(0xF00)
+const unsigned char BYTES_PER_FONT_CHAR = 0x5;
+const unsigned short CODE_START = 0x200;
 
-
-class chip8
+class Chip8
 {
     public:
 
         // Constructor. (In case you couldn't tell.)
-        chip8();
+        Chip8();
 
         // Initialization of variables.
         bool init();
@@ -68,9 +73,8 @@ class chip8
         // Program counter.
         unsigned short progCounter;
 
-        // Used to store the current opCode to be processed & previous.
+        // Used to store the current opCode to be processed
         unsigned short opCode;
-        unsigned short opCodePrev;
 
         // Used to simulate VRAM, this is the buffer that gets written to the display.
         unsigned char graphicsBuffer[SCREEN_HEIGHT * SCREEN_WIDTH];

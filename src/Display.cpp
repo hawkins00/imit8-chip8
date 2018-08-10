@@ -1,4 +1,11 @@
-/*
+/**
+ * Copyright (c) 2018 Chris Kim & Matt Hawkins
+ * This program is licensed under the "GPLv3 License"
+ * Please see the file License.md in the source
+ * distribution of this software for license terms.
+ */
+
+ /*
  * Display
  * Class to Display output to the screen.
  */

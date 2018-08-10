@@ -1,5 +1,12 @@
-/*
- * logWriter
+/**
+ * Copyright (c) 2018 Chris Kim & Matt Hawkins
+ * This program is licensed under the "GPLv3 License"
+ * Please see the file License.md in the source
+ * distribution of this software for license terms.
+ */
+
+ /*
+ * LogWriter
  * "It writes logs."
  */
 
@@ -11,17 +18,17 @@
 #include <fstream>
 #include <chrono>
 
-class logWriter
+class LogWriter
 {
     public:
-        struct logLevel
+        struct LogLevel
         {
-            enum level
+            enum Level
             {
                 ERROR, WARNING, INFO, DEBUG,
             };
 
-            inline static std::string to_string(level l)
+            inline static std::string to_string(Level l)
             {
                 switch (l)
                 {
@@ -39,25 +46,25 @@ class logWriter
             }
         };
 
-        logWriter();
-        logWriter(std::string fileToOpen, logLevel::level level);
-        ~logWriter();
+        LogWriter();
+        LogWriter(std::string fileToOpen, LogLevel::Level level);
+        ~LogWriter();
 
         std::string& getOutputFileName();
-        bool log(logLevel::level levelOfMessage, std::string stringToWrite);
+        bool log(LogLevel::Level levelOfMessage, std::string stringToWrite);
 
     private:
         std::string outputFileName = "";
         std::ofstream outputStream;
-        logLevel::level currentLoggingLevel;
+        LogLevel::Level currentLoggingLevel;
 
         void setOutputFileName(const std::string& outputFileName);
         bool openFile(std::string fileToOpen);
         bool closeFile();
         bool writeToFile(std::string levelOfMessage, std::string& stringToWriteToLogfile);
 
-        logLevel::level getCurrentLoggingLevel() const;
-        void setCurrentLoggingLevel(logLevel::level currentLoggingLevel);
+        LogLevel::Level getCurrentLoggingLevel() const;
+        void setCurrentLoggingLevel(LogLevel::Level currentLoggingLevel);
 };
 
 #endif //IMIT8_CHIP8_LOGWRITER_H
