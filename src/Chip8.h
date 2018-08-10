@@ -17,8 +17,10 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <stack>
 #include <vector>
+#include "LogWriter.h"
 
 #define SCREEN_HEIGHT 32
 #define SCREEN_WIDTH 64
@@ -37,7 +39,7 @@ class Chip8
     public:
 
         // Constructor. (In case you couldn't tell.)
-        Chip8();
+        Chip8(LogWriter& logWriter);
 
         // Initialization of variables.
         bool init();
@@ -107,7 +109,11 @@ class Chip8
         // size of loaded ROM in bytes
         unsigned short romBytes;
 
+        // display needs to be updated if dirty
         bool isDirty;
+
+        // shared LogWriter
+        LogWriter* logWriter;
 
         // Load font into memory
         bool loadFontSet();
@@ -126,6 +132,9 @@ class Chip8
         unsigned char getHexDigit4(unsigned short hexShort);
         unsigned char getHexDigits3and4(unsigned short hexShort);
         unsigned short getHexAddress(unsigned short hexShort); // digits 2, 3, 4
+
+        // helper function for printing hex numbers
+        std::string intToHexString(unsigned short number, int width = 4);
 };
 
 #endif //IMIT8_CHIP8_CHIP8_H

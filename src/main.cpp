@@ -22,18 +22,18 @@ const microseconds USECONDS_PER_FRAME = microseconds(1000000 / FRAMES_PER_SECOND
 int main(int argc, char* argv[])
 {
     Display::clearScreen();
-    LogWriter LogWriter("DEBUG_LOG.txt", LogWriter::LogLevel::INFO);
+    LogWriter logWriter("DEBUG_LOG.txt", LogWriter::LogLevel::INFO);
 
     // check for correct num of args
     if (argc != 2)
     {
-        LogWriter.log(LogWriter::LogLevel::ERROR, "No input program file provided. Exiting.");
+        logWriter.log(LogWriter::LogLevel::ERROR, "No input program file provided. Exiting.\n");
         std::cerr << "ERROR: No input program file provided." << std::endl;
         std::cerr << "Usage: imit8-chip8 dir/filename.ext" << std::endl;
         exit(1);
     }
 
-    Chip8 cpu0;
+    Chip8 cpu0(logWriter);
     Display screen(cpu0.getScreen()); // create display and give access to vram
 
     // load the ROM file
@@ -41,16 +41,9 @@ int main(int argc, char* argv[])
     {
         std::string loadFileFail = "ROM file (";
         loadFileFail += argv[1];
-        loadFileFail += ") could not be loaded. Exiting.";
-        LogWriter.log(LogWriter::LogLevel::ERROR, loadFileFail);
+        loadFileFail += ") could not be loaded. Exiting.\n";
+        std::cout << loadFileFail << std::endl;
         exit(2);
-    }
-    else
-    {
-        std::string loadFile = "ROM file (";
-        loadFile += argv[1];
-        loadFile += ") successfully loaded.";
-        LogWriter.log(LogWriter::LogLevel::INFO, loadFile);
     }
 
     bool isRunning = true;
@@ -84,7 +77,7 @@ int main(int argc, char* argv[])
         std::this_thread::sleep_for(USECONDS_PER_FRAME - diff);
     }
 
-    LogWriter.log(LogWriter::LogLevel::INFO, "Program loop exited. Shutting down.");
+    logWriter.log(LogWriter::LogLevel::INFO, "Program loop exited normally. Shutting down.\n");
 
     return 0;
 }

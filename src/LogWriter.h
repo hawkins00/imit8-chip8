@@ -57,6 +57,7 @@ class LogWriter
         std::string outputFileName = "";
         std::ofstream outputStream;
         LogLevel::Level currentLoggingLevel;
+        bool isFreshLog;
 
         void setOutputFileName(const std::string& outputFileName);
         bool openFile(std::string fileToOpen);

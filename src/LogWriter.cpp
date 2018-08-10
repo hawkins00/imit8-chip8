@@ -15,14 +15,14 @@
 LogWriter::
 LogWriter()
 {
-    std::cout << "logWriter was instantiated without a file name.  Using \"log.txt\" and ERROR as the maximum logging level." << std::endl;
+    //std::cout << "logWriter was instantiated without a file name.  Using \"log.txt\" and ERROR as the maximum logging level." << std::endl;
     LogWriter("log.txt", LogLevel::Level::ERROR);
 }
 
 LogWriter::
 LogWriter(std::string fileToOpen, LogLevel::Level level)
 {
-    std::cout << "Using \"" << fileToOpen << "\" as the log file." << std::endl;
+    isFreshLog = true;
     setOutputFileName("./" + fileToOpen);
     setCurrentLoggingLevel(level);
     openFile(outputFileName);
@@ -65,6 +65,11 @@ writeToFile(std::string levelOfMessage, std::string& stringToWriteToLogfile)
 {
     if (outputStream.is_open() && outputStream.good())
     {
+        if (isFreshLog)
+        {
+            outputStream.write("------------------------------------------------------------\n", 61);
+            isFreshLog = false;
+        }
         time_t now = time(NULL);
         std::string logTime = ctime(&now);
         outputStream.write(logTime.c_str(), logTime.length() - 1); // for some reason this adds a newline character, so -1
