@@ -110,8 +110,8 @@ loadROM(std::ifstream* fin)
     }
 
     // If we filled the memory, but we're not at the end of the file, then the ROM is too big.
-    // If the length of the ROM file is 0, it's an error (all instructions are two bytes).
-    return !((i >= MEMORY_SIZE && !fin->eof()) || !romBytes); // || romBytes % 2);
+    // If the length of the ROM file is 0, it's an error.
+    return !((i >= MEMORY_SIZE && !fin->eof()) || !romBytes);
 }
 
 // Get the starting location of vram
@@ -141,6 +141,7 @@ fetch()
 }
 
 // Decode the fetched opCode and execute it
+// FIXME: some log writing is incorrect - logging post-work value instead of pre-work
 bool Chip8::
 decodeAndExecute()
 {
@@ -171,8 +172,7 @@ decodeAndExecute()
                         logWriter->log(LogWriter::LogLevel::ERROR, "Call stack is empty. Exiting.");
                         return false;
                     }
-                    std::string log = "Return from subroutine";
-                    logWriter->log(LogWriter::LogLevel::DEBUG, log);
+                    logWriter->log(LogWriter::LogLevel::DEBUG, "Return from subroutine");
                     progCounter = callStack.top();
                     callStack.pop();
                     break;
@@ -193,12 +193,12 @@ decodeAndExecute()
             // if in a single-instruction goto loop, may as well end computation
             if (progCounter == prevProgramCounter)
             {
-                std::string log = "Execution ended due to GOTO loop, PC=" + intToHexString(progCounter) +
-                        ", OpCode=" + intToHexString(opCode);
-                logWriter->log(LogWriter::LogLevel::DEBUG, log);
+                logWriter->log(LogWriter::LogLevel::DEBUG,
+                        "Execution ended due to GOTO loop, PC=" + intToHexString(progCounter) +
+                        ", OpCode=" + intToHexString(opCode));
                 return false;
             }
-            logWriter->log(LogWriter::LogLevel::DEBUG, "GoTo");
+            logWriter->log(LogWriter::LogLevel::DEBUG, "GOTO");
             break;
         }
 
@@ -210,7 +210,7 @@ decodeAndExecute()
             // stack overflow
             if (callStack.size() > STACK_DEPTH)
             {
-                logWriter->log(LogWriter::LogLevel::DEBUG, "Stack overflow");
+                logWriter->log(LogWriter::LogLevel::ERROR, "Stack overflow");
                 return false;
             }
 
@@ -222,12 +222,12 @@ decodeAndExecute()
             if (registers[getHexDigit2(opCode)] == getHexDigits3and4(opCode))
             {
                 progCounter += 4;
-                logWriter->log(LogWriter::LogLevel::DEBUG, "Skip if register == value: EQUAL (" + std::to_string(getHexDigits3and4(opCode)) + ")");
+                logWriter->log(LogWriter::LogLevel::DEBUG, "Skip next opcode if register == value: EQUAL (" + std::to_string(getHexDigits3and4(opCode)) + ")");
             }
             else
             {
                 progCounter += 2;
-                logWriter->log(LogWriter::LogLevel::DEBUG, "Skip if register == value: NOT EQUAL (" + std::to_string(registers[getHexDigit2(opCode)]) + " != " + std::to_string(getHexDigits3and4(opCode)) + ")");
+                logWriter->log(LogWriter::LogLevel::DEBUG, "Skip next opcode if register == value: NOT EQUAL (" + std::to_string(registers[getHexDigit2(opCode)]) + " != " + std::to_string(getHexDigits3and4(opCode)) + ")");
             }
             break;
 
@@ -236,12 +236,12 @@ decodeAndExecute()
             if (registers[getHexDigit2(opCode)] != getHexDigits3and4(opCode))
             {
                 progCounter += 4;
-                logWriter->log(LogWriter::LogLevel::DEBUG, "Skip if register != value: NOT EQUAL (" + std::to_string(registers[getHexDigit2(opCode)]) + " != " + std::to_string(getHexDigits3and4(opCode)) + ")");
+                logWriter->log(LogWriter::LogLevel::DEBUG, "Skip next opcode if register != value: NOT EQUAL (" + std::to_string(registers[getHexDigit2(opCode)]) + " != " + std::to_string(getHexDigits3and4(opCode)) + ")");
             }
             else
             {
                 progCounter += 2;
-                logWriter->log(LogWriter::LogLevel::DEBUG, "Skip if register != value: EQUAL (" + std::to_string(getHexDigits3and4(opCode)) + ")");
+                logWriter->log(LogWriter::LogLevel::DEBUG, "Skip next opcode if register != value: EQUAL (" + std::to_string(getHexDigits3and4(opCode)) + ")");
             }
             break;
 
@@ -249,20 +249,20 @@ decodeAndExecute()
         case 0x5:
             if (getHexDigit4(opCode) != 0)
             {
-                logWriter->log(LogWriter::LogLevel::ERROR, "OpCode not implemented: " + intToHexString(opCode));
+                logWriter->log(LogWriter::LogLevel::ERROR, "Opcode not implemented: " + intToHexString(opCode));
                 return false;
             }
 
             if (registers[getHexDigit2(opCode)] == registers[getHexDigit3(opCode)])
             {
                 progCounter += 4;
-                logWriter->log(LogWriter::LogLevel::DEBUG, "Skip if register == register: EQUAL (" +
+                logWriter->log(LogWriter::LogLevel::DEBUG, "Skip next opcode if register == register: EQUAL (" +
                         std::to_string(registers[getHexDigit2(opCode)]) + ")");
             }
             else
             {
                 progCounter += 2;
-                logWriter->log(LogWriter::LogLevel::DEBUG, "Skip if register == register: NOT EQUAL (" +
+                logWriter->log(LogWriter::LogLevel::DEBUG, "Skip next opcode if register == register: NOT EQUAL (" +
                         std::to_string(registers[getHexDigit2(opCode)]) + " != " + std::to_string(registers[getHexDigit3(opCode)]) + ")");
             }
             break;
@@ -294,7 +294,7 @@ decodeAndExecute()
                     progCounter += 2;
                     logWriter->log(LogWriter::LogLevel::DEBUG,
                             "Set register = register (reg[" + intToHexString(getHexDigit2(opCode), 1) + "] = " +
-                            std::to_string(registers[getHexDigit3(opCode)]));
+                            std::to_string(registers[getHexDigit3(opCode)]) + ")");
                     break;
 
                 // 0x8RS1 (registers[R] |= registers[S])
@@ -338,7 +338,8 @@ decodeAndExecute()
                     logWriter->log(LogWriter::LogLevel::DEBUG,
                             "Set register += register (reg[" + std::to_string(getHexDigit2(opCode)) + "] = " +
                             std::to_string(registers[getHexDigit2(opCode)]) + " + " +
-                            std::to_string(registers[getHexDigit3(opCode)]) + ")");
+                            std::to_string(registers[getHexDigit3(opCode)]) + ", reg[0xF] = " +
+                            std::to_string(registers[0xF]) + ")");
                     break;
                 }
 
@@ -351,9 +352,10 @@ decodeAndExecute()
                     registers[0xF] = s > r ? 0 : 1; // carry (borrow) bit
                     progCounter += 2;
                     logWriter->log(LogWriter::LogLevel::DEBUG,
-                                   "Set register -= register (reg[" + std::to_string(getHexDigit2(opCode)) + "] = " +
-                                   std::to_string(registers[getHexDigit2(opCode)]) + " - " +
-                                   std::to_string(registers[getHexDigit3(opCode)]) + ")");
+                            "Set register -= register (reg[" + std::to_string(getHexDigit2(opCode)) + "] = " +
+                            std::to_string(registers[getHexDigit2(opCode)]) + " - " +
+                            std::to_string(registers[getHexDigit3(opCode)]) + ", reg[0xF] = " +
+                            std::to_string(registers[0xF]) + ")");
                     break;
                 }
 
@@ -367,8 +369,8 @@ decodeAndExecute()
                     progCounter += 2;
                     logWriter->log(LogWriter::LogLevel::DEBUG,
                             "Set register >>= 1 (reg[" + intToHexString(getHexDigit2(opCode), 1) + "] = " +
-                            std::to_string(registers[getHexDigit2(opCode)]) + " >> 1, reg[0xF] = " +
-                            std::to_string(registers[0xF]) + ")");
+                            std::to_string(r) + " >> 1 = " + std::to_string(registers[getHexDigit2(opCode)]) +
+                            ", reg[0xF] = " + std::to_string(registers[0xF]) + ")");
                     break;
                 }
 
@@ -381,11 +383,11 @@ decodeAndExecute()
                     registers[0xF] = r > s ? 0 : 1; // carry (borrow) bit
                     progCounter += 2;
                     logWriter->log(LogWriter::LogLevel::DEBUG,
-                                   "Set register[A] = register[B] - register[A] (reg[" +
-                                   intToHexString(getHexDigit2(opCode), 1) + "] = " +
-                                   std::to_string(registers[getHexDigit3(opCode)]) + " - " +
-                                   std::to_string(registers[getHexDigit2(opCode)]) + ", reg[0xF] = " +
-                                   std::to_string(registers[0xF]) + ")");
+                            "Set register[A] = register[B] - register[A] (reg[" +
+                            intToHexString(getHexDigit2(opCode), 1) + "] = " +
+                            std::to_string(registers[getHexDigit3(opCode)]) + " - " +
+                            std::to_string(registers[getHexDigit2(opCode)]) + ", reg[0xF] = " +
+                            std::to_string(registers[0xF]) + ")");
                     break;
                 }
 
@@ -397,7 +399,6 @@ decodeAndExecute()
                     registers[0xF] = r >> 7;
                     registers[getHexDigit2(opCode)] = r << 1;
                     progCounter += 2;
-                    //std::cout << "0x8RSE" << std::hex << opCode << std::endl;
                     logWriter->log(LogWriter::LogLevel::DEBUG,
                             "Set register <<= 1 (reg[" + intToHexString(getHexDigit2(opCode), 1) + "] = " +
                             std::to_string(r) + " << 1, reg[0xF] = " +
@@ -415,19 +416,25 @@ decodeAndExecute()
         case 0x9:
             if (getHexDigit4(opCode) != 0)
             {
-                std::cout << "OpCode not implemented (" << std::hex << opCode << ")" << std::endl;
+                logWriter->log(LogWriter::LogLevel::ERROR,
+                        "OpCode not implemented: " + intToHexString(opCode));
                 return false;
             }
 
             if (registers[getHexDigit2(opCode)] != registers[getHexDigit3(opCode)])
             {
                 progCounter += 4;
-                //std::cout << "0x9 (skip next)" << std::endl;
+                logWriter->log(LogWriter::LogLevel::DEBUG,
+                        "Skip next opcode if register[X] != register[Y]: NOT EQUAL (" +
+                        std::to_string(registers[getHexDigit2(opCode)]) + " != " +
+                        std::to_string(registers[getHexDigit3(opCode)]) + ")");
             }
             else
             {
                 progCounter += 2;
-                //std::cout << "0x9 (don't skip next)" << std::endl;
+                logWriter->log(LogWriter::LogLevel::DEBUG,
+                        "Skip next opcode if register[X] != register[Y]: EQUAL (" +
+                        std::to_string(registers[getHexDigit2(opCode)]) + ")");
             }
             break;
 
@@ -435,23 +442,32 @@ decodeAndExecute()
         case 0xA:
             index = getHexAddress(opCode);
             progCounter += 2;
-            //std::cout << "0xAXXX" << std::endl;
+            logWriter->log(LogWriter::LogLevel::DEBUG,
+                    "Set value of index (index = " +
+                    intToHexString(getHexAddress(opCode), 3) + ")");
             break;
 
         // 0xBXXX (pc = registers[0] + XXX)
         case 0xB:
             progCounter = registers[0] + getHexAddress(opCode);
-            //std::cout << "0xBXXX" << std::endl;
+            logWriter->log(LogWriter::LogLevel::DEBUG,
+                    "Set PC = register[0x0] + value (PC = " +
+                    std::to_string(registers[0x0]) +
+                    intToHexString(getHexAddress(opCode), 3) + ")");
             break;
 
         // 0xCRXX (registers[R] = rand() & XX)
         case 0xC:
-            registers[getHexDigit2(opCode)] = (rand() % 256) & getHexDigits3and4(opCode);
+        {
+            unsigned char rando = static_cast<unsigned char>(rand() % 0x100);
+            registers[getHexDigit2(opCode)] = rando & getHexDigits3and4(opCode);
             progCounter += 2;
-            //std::cout << "0xCXXX" << std::endl;
+            logWriter->log(LogWriter::LogLevel::DEBUG,
+                    "Set register = rand() & value (reg[" + intToHexString(getHexDigit2(opCode), 1) + "] = " +
+                    intToHexString(rando, 2) + " & " + intToHexString(getHexDigits3and4(opCode), 2) + ")");
             break;
+        }
 
-        // FIXME: some ROMs only work on systems where vram is not part of the 4kb, so do that
         // 0xDXYH (draw an 8xH sprite at x = registers[X], y = registers[Y])
         case 0xD:
         {
@@ -464,19 +480,11 @@ decodeAndExecute()
                 int xByte = x / 8;
                 int xBit = x % 8;
                 unsigned short start = xByte + y * SCREEN_WIDTH_SIZE;
-                //std::cout << std::dec << "x: " << (int)x << " y: " << (int)y << " h: " << (int)h << std::hex << " start: " << start << " index: " << index <<  std::endl;
                 if (xBit == 0) // Drawing to a single byte per line
                 {
                     for (int i = 0; i < h; ++i)
                     {
                         unsigned short loc = (start + i * SCREEN_WIDTH_SIZE) % SCREEN_SIZE;
-                        /*
-                        unsigned short loc = start + i * (SCREEN_WIDTH >> 3);
-                        if (loc > MEMORY_SIZE)
-                        {
-                            loc -= ((SCREEN_WIDTH * SCREEN_HEIGHT) >> 6);
-                        }
-                         */
                         unsigned char temp = graphicsBuffer[loc];
                         graphicsBuffer[loc] ^= memory[index + i];
                         if (temp & ~graphicsBuffer[loc])
@@ -519,10 +527,19 @@ decodeAndExecute()
                         }
                     }
                 }
+                progCounter += 2;
+                isDirty = true;
+                logWriter->log(LogWriter::LogLevel::DEBUG,
+                        "Draw sprite (x = " + std::to_string(x) + ", y = " + std::to_string(y) +
+                        ", h = " + std::to_string(h) + ")");
             }
-            progCounter += 2;
-            isDirty = true;
-            //std::cout << "0xDXYH - Draw: " << std::hex << opCode << std::endl;
+            else
+            {
+                logWriter->log(LogWriter::LogLevel::ERROR,
+                        "Draw sprite top left off display (x = " + std::to_string(x) +
+                        ", y = " + std::to_string(y) + ")");
+                return false;
+            }
             break;
         }
 
@@ -535,10 +552,16 @@ decodeAndExecute()
                     if (keypad[registers[getHexDigit2(opCode)]])
                     {
                         progCounter += 4;
+                        logWriter->log(LogWriter::LogLevel::DEBUG,
+                                "Skip next opcode if key[register] pressed: PRESSED (key[" +
+                                intToHexString(registers[getHexDigit2(opCode)], 1) + "] = 1)");
                     }
                     else
                     {
                         progCounter += 2;
+                        logWriter->log(LogWriter::LogLevel::DEBUG,
+                                "Skip next opcode if key[register] pressed: NOT PRESSED (key[" +
+                                intToHexString(registers[getHexDigit2(opCode)], 1) + "] = 0)");
                     }
                     break;
 
@@ -547,17 +570,22 @@ decodeAndExecute()
                     if (!keypad[registers[getHexDigit2(opCode)]])
                     {
                         progCounter += 4;
+                        logWriter->log(LogWriter::LogLevel::DEBUG,
+                                "Skip next opcode if key[register] not pressed: NOT PRESSED (key[" +
+                                intToHexString(registers[getHexDigit2(opCode)], 1) + "] = 0)");
                     }
                     else
                     {
                         progCounter += 2;
+                        logWriter->log(LogWriter::LogLevel::DEBUG,
+                                "Skip next opcode if key[register] not pressed: PRESSED (key[" +
+                                intToHexString(registers[getHexDigit2(opCode)], 1) + "] = 1)");
                     }
                     break;
 
                 // opCode is not implemented, so crash already
                 default:
-                    std::cout << "OpCode not implemented (" << std::hex << opCode << ")" << std::endl;
-                    //std::cout << "PC: " << std::hex << progCounter << std::endl;
+                    logWriter->log(LogWriter::LogLevel::ERROR, "Opcode not implemented: " + intToHexString(opCode));
                     return false;
             }
             break;
@@ -582,6 +610,7 @@ decodeAndExecute()
                     {
                         tempChar = static_cast<unsigned char>(getchar());
                     } while (!isxdigit(tempChar));
+                    // FIXME: tempChar needs to be changed from hex char to hex value
                     registers[getHexDigit2(opCode)] = tempChar;
                     progCounter += 2;
                     //std::cout << "0xFR0A" << std::endl;
@@ -610,7 +639,6 @@ decodeAndExecute()
 
                 // 0xFR29 (set index to address of sprite for character in registers[R])
                 case 0x29:
-                    // TODO (?): check if index is legal
                     index = registers[getHexDigit2(opCode)] * BYTES_PER_FONT_CHAR;
                     progCounter += 2;
                     //std::cout << "0xFR29: index = font sprite address" << std::endl;
@@ -658,14 +686,14 @@ decodeAndExecute()
 
                 // opCode is not implemented, so crash already
                 default:
-                    std::cout << "OpCode not implemented (" << std::hex << opCode << ")" << std::endl;
+                    logWriter->log(LogWriter::LogLevel::ERROR, "Opcode not implemented: " + intToHexString(opCode));
                     return false;
             }
             break;
 
         default:
         {
-            std::cout << "OpCode not implemented (" << std::hex << opCode << ")" << std::endl;
+            logWriter->log(LogWriter::LogLevel::ERROR, "Opcode not implemented: " + intToHexString(opCode));
             return false;
         }
     }
@@ -680,7 +708,9 @@ updateTimers()
     if (soundInterruptTimer > 0)
     {
         if (soundInterruptTimer > 1)
-            std::cout << "beeping..." << std::endl;
+        {
+            logWriter->log(LogWriter::LogLevel::DEBUG, "Beeping.");
+        }
         --soundInterruptTimer;
     }
     if (delayInterruptTimer > 0)
