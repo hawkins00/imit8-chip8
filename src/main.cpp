@@ -66,15 +66,15 @@ int main(int argc, char* argv[])
             screen.drawDisplay();
         }
 
+        // sleep to ensure screen updates occur at 60 Hz
+        microseconds frameEnd = duration_cast<microseconds>(system_clock::now().time_since_epoch());
+        microseconds frameTime = frameEnd - frameStart;
+        std::this_thread::sleep_for(USECONDS_PER_FRAME - frameTime);
+
         // update 60 Hz timers
         cpu0.updateTimers();
 
         // TODO: read key state
-
-        // sleep to ensure screen updates occur at 60 Hz
-        microseconds frameEnd = duration_cast<microseconds>(system_clock::now().time_since_epoch());
-        microseconds diff = frameEnd - frameStart;
-        std::this_thread::sleep_for(USECONDS_PER_FRAME - diff);
     }
 
     logWriter.log(LogWriter::LogLevel::INFO, "Program loop exited normally. Shutting down.\n");
