@@ -18,8 +18,8 @@ Display(unsigned char * screen, unsigned short height, unsigned short width)
     setHeight(height);
     setWidth(width);
     clearFrame();
-    Display::screen = screen;
-    std::clog << "Display was initialized with height: " << height << " and width: " << width << std::endl;
+    this->screen = screen;
+    //std::clog << "Display was initialized with height: " << height << " and width: " << width << std::endl;
 }
 
 
@@ -80,7 +80,7 @@ getHeight() const
 void Display::
 setHeight(int height)
 {
-    Display::height = height;
+    this->height = height;
 }
 
 int Display::
@@ -92,7 +92,7 @@ getWidth() const
 void Display::
 setWidth(int width)
 {
-    Display::width = width;
+    this->width = width;
 }
 
 void Display::clearFrame()
