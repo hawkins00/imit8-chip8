@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2018 Chris Kim & Matt Hawkins
+ * Copyright (c) Chris Kim & Matt Hawkins
  * This program is licensed under the "GPLv3 License"
  * Please see the file License.md in the source
  * distribution of this software for license terms.
@@ -38,10 +38,10 @@ class Chip8
 {
     public:
 
-        // Constructor. (In case you couldn't tell.)
+        // Constructor
         Chip8(LogWriter& logWriter);
 
-        // Initialization of variables.
+        // Initialization of variables
         bool init();
 
         // Loads the supplied file as the ROM
@@ -61,12 +61,11 @@ class Chip8
 
     private:
 
-        // Simulates the system memory (RAM).  This should probably
-        // be moved to it's own object at some point for good OOP...
+        // Simulates the system memory (RAM).
         unsigned char memory[MEMORY_SIZE];
 
         // Simulates the CPU registers.
-        // Registers named V0 through VE.  16th register ("VF") used as "carry flag".
+        // Registers named V0 through VE. 16th register ("VF") used as "carry flag".
         unsigned char registers[NUMBER_OF_REGISTERS];
 
         // "Index" register.
@@ -92,9 +91,6 @@ class Chip8
                                          0xF0, 0x80, 0xF0, 0x80, 0xF0, 0xF0, 0x80, 0xF0, 0x80, 0x80};
 
         // "Interrupt timers" that the CHIP-8 uses for delays and sound purposes.
-        // These timers go off every 60Hz.  They are set to some value > 0, and count down to zero.
-        // When the timer reaches zero, a delay or sound is triggered.
-        // TODO: ^^^ Not so sure this is correct ^^^
         unsigned char delayInterruptTimer;
         unsigned char soundInterruptTimer;
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2018 Chris Kim & Matt Hawkins
+ * Copyright (c) Chris Kim & Matt Hawkins
  * This program is licensed under the "GPLv3 License"
  * Please see the file License.md in the source
  * distribution of this software for license terms.
@@ -22,7 +22,6 @@ Display(unsigned char * screen, unsigned short height, unsigned short width)
     std::clog << "Display was initialized with height: " << height << " and width: " << width << std::endl;
 }
 
-
 void Display::
 drawDisplay()
 {
@@ -31,7 +30,7 @@ drawDisplay()
         for(int columnOf8 = 0; columnOf8 < getWidth() / 8; ++columnOf8)
         {
             printChar(screen[row * 8 + columnOf8]);
-            if((columnOf8+1) % 8 == 0)
+            if((columnOf8 + 1) % 8 == 0)
             {
                 frame += '\n';
             }

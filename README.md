@@ -1,6 +1,6 @@
 # imit8-chip8
 
-Copyright © 2018 Chris Kim & Matt Hawkins
+Copyright © Chris Kim & Matt Hawkins
 
 This is a virtual machine for interpreting [CHIP-8](https://en.wikipedia.org/wiki/CHIP-8) code. CHIP-8 is a minimal, interpreted language for creating simplistic games for 8-bit computers.
 
