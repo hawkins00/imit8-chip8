@@ -14,11 +14,12 @@
 #define IMIT8_CHIP8_DISPLAY_H
 
 #include <iostream>
+#include "LogWriter.h"
 
 class Display
 {
     public:
-        Display(unsigned char * screen, unsigned short height = 32, unsigned short width = 64);
+        Display(unsigned char * screen, LogWriter * logWriter, unsigned short height = 32, unsigned short width = 64);
         void drawDisplay();
         static void clearScreen();
 
@@ -27,6 +28,7 @@ class Display
         int width;
         unsigned char* screen;
         std::string frame;
+        LogWriter* logWriter;
 
         int getHeight() const;
         void setHeight(int height);

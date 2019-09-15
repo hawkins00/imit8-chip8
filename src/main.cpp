@@ -5,35 +5,25 @@
  * distribution of this software for license terms.
  */
 
-#include <algorithm>
-#include <iostream>
 #include <thread>
 #include "Chip8.h"
 #include "Display.h"
 #include "LogWriter.h"
 
 using namespace std::chrono;
-#define OPCODES_PER_SECOND 600
-#define FRAMES_PER_SECOND 60
-#define OPCODES_PER_FRAME (OPCODES_PER_SECOND / FRAMES_PER_SECOND)
-const microseconds USECONDS_PER_FRAME = microseconds(1000000 / FRAMES_PER_SECOND);
 
 int main(int argc, char* argv[])
 {
-    Display::clearScreen();
-    LogWriter logWriter("DEBUG_LOG.txt", LogWriter::LogLevel::INFO);
-
-    // check for correct num of args
     if (argc != 2)
     {
-        logWriter.log(LogWriter::LogLevel::ERROR, "No input program file provided. Exiting.\n");
         std::cerr << "ERROR: No input program file provided." << std::endl;
         std::cerr << "Usage: imit8-chip8 dir/filename.ext" << std::endl;
         exit(1);
     }
 
-    Chip8 cpu0(logWriter);
-    Display screen(cpu0.getScreen()); // create display and give access to vram
+    LogWriter logWriter;
+    Chip8 cpu0(&logWriter);
+    Display screen(cpu0.getScreen(), &logWriter); // create display and give access to vram
 
     // load the ROM file
     if (!cpu0.loadFile(argv[1]))
@@ -45,9 +35,11 @@ int main(int argc, char* argv[])
         exit(2);
     }
 
+    Display::clearScreen();
     bool isRunning = true;
+
     // main execution loop
-    while (isRunning)
+    do
     {
         microseconds frameStart = duration_cast<microseconds>(system_clock::now().time_since_epoch());
         bool toDraw = false;
@@ -65,16 +57,13 @@ int main(int argc, char* argv[])
             screen.drawDisplay();
         }
 
-        // update 60 Hz timers
         cpu0.updateTimers();
-
-        // TODO: read key state
 
         // sleep to ensure screen updates occur at 60 Hz
         microseconds frameEnd = duration_cast<microseconds>(system_clock::now().time_since_epoch());
-        microseconds diff = frameEnd - frameStart;
-        std::this_thread::sleep_for(USECONDS_PER_FRAME - diff);
-    }
+        microseconds diff = microseconds(USECONDS_PER_FRAME) - (frameEnd - frameStart);
+        std::this_thread::sleep_for(diff);
+    } while (isRunning);
 
     logWriter.log(LogWriter::LogLevel::INFO, "Program loop exited normally. Shutting down.\n");
 

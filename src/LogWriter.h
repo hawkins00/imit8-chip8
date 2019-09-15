@@ -46,8 +46,7 @@ class LogWriter
             }
         };
 
-        LogWriter();
-        LogWriter(std::string fileToOpen, LogLevel::Level level);
+        explicit LogWriter(std::string fileToOpen = "log.txt", LogLevel::Level level = LogLevel::Level::INFO);
         ~LogWriter();
 
         std::string& getOutputFileName();

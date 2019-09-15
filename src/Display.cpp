@@ -11,15 +11,22 @@
  */
 
 #include "Display.h"
+#include "LogWriter.h"
 
 Display::
-Display(unsigned char * screen, unsigned short height, unsigned short width)
+Display(unsigned char * scrn, LogWriter * logWrit, unsigned short height, unsigned short width)
 {
     setHeight(height);
     setWidth(width);
     clearFrame();
-    Display::screen = screen;
-    std::clog << "Display was initialized with height: " << height << " and width: " << width << std::endl;
+    screen = scrn;
+    logWriter = logWrit;
+
+    std::string logOut = "Display initialized with height: ";
+    logOut += std::to_string(height);
+    logOut += " and width: ";
+    logOut += std::to_string(width);
+    Display::logWriter->log(LogWriter::LogLevel::INFO, logOut);
 }
 
 void Display::
@@ -61,7 +68,7 @@ printChar(unsigned char toPrint)
     {
         if(toPrint & (0x80 >> i))
         {
-            frame += "▀"; //█▀
+            frame += "▅"; //█▀
         }
         else
         {
@@ -77,9 +84,9 @@ getHeight() const
 }
 
 void Display::
-setHeight(int height)
+setHeight(int ht)
 {
-    Display::height = height;
+    height = ht;
 }
 
 int Display::
@@ -89,9 +96,9 @@ getWidth() const
 }
 
 void Display::
-setWidth(int width)
+setWidth(int wid)
 {
-    Display::width = width;
+    width = wid;
 }
 
 void Display::clearFrame()

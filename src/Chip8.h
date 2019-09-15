@@ -25,12 +25,16 @@
 #define SCREEN_HEIGHT 32
 #define SCREEN_WIDTH 64
 #define SCREEN_WIDTH_SIZE (SCREEN_WIDTH / 8)
-#define SCREEN_SIZE 256
+#define SCREEN_SIZE (SCREEN_WIDTH_SIZE * SCREEN_HEIGHT)
 #define MEMORY_SIZE 4096
 #define NUMBER_OF_REGISTERS 16
 #define STACK_DEPTH 16
 #define NUMBER_OF_KEYPAD_BUTTONS 16
 #define FONT_SIZE 80
+#define OPCODES_PER_SECOND 600
+#define FRAMES_PER_SECOND 60
+#define OPCODES_PER_FRAME (OPCODES_PER_SECOND / FRAMES_PER_SECOND)
+#define USECONDS_PER_FRAME (1000000 / FRAMES_PER_SECOND)
 const unsigned char BYTES_PER_FONT_CHAR = 0x5;
 const unsigned short CODE_START = 0x200;
 
@@ -39,7 +43,7 @@ class Chip8
     public:
 
         // Constructor
-        Chip8(LogWriter& logWriter);
+        explicit Chip8(LogWriter* logWriter);
 
         // Initialization of variables
         bool init();
@@ -90,7 +94,7 @@ class Chip8
                                          0xF0, 0x80, 0x80, 0x80, 0xF0, 0xE0, 0x90, 0x90, 0x90, 0xE0,
                                          0xF0, 0x80, 0xF0, 0x80, 0xF0, 0xF0, 0x80, 0xF0, 0x80, 0x80};
 
-        // "Interrupt timers" that the CHIP-8 uses for delays and sound purposes.
+        // "Interrupt timers" used for delays and sound purposes.
         unsigned char delayInterruptTimer;
         unsigned char soundInterruptTimer;
 
@@ -108,6 +112,7 @@ class Chip8
         // display needs to be updated if dirty
         bool isDirty;
 
+
         // shared LogWriter
         LogWriter* logWriter;
 
@@ -118,7 +123,7 @@ class Chip8
         bool loadROM(std::ifstream * fin);
 
         // What they say on the box
-        bool fetch();
+        void fetch();
         bool decodeAndExecute();
 
         // OpCodes are 4 hex digits. Generally we want a subset of those digits.
