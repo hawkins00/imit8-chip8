@@ -1,7 +1,5 @@
 # imit8-chip8
 
-Copyright © Chris Kim & Matt Hawkins
-
 This is a virtual machine for interpreting [CHIP-8](https://en.wikipedia.org/wiki/CHIP-8) code. CHIP-8 is a minimal, interpreted language for creating simplistic games for 8-bit computers.
 
 Though there are many other Chip-8 implementations in existence, this particular project is aimed at being extensible, and suitable for use in teaching environments.
@@ -20,7 +18,8 @@ To load and run a ROM, place its path as the lone paramater to the program:
 ## Future Plans
 The graphic output of the VM is ascii- / console-based. The experience could be improved by using an OpenGL library for more responsive display updates. The library could also be used to create actual game beeps.
 
-# License
+## Authors
+Matt Hawkins & Chris Kim
 
+## License
 This program is licensed under the "GPLv3 License". Please see the file `License.md` in this distribution for license terms.
-
