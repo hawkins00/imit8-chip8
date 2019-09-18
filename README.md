@@ -1,6 +1,6 @@
 # imit8-chip8
 
-This is a virtual machine for interpreting [CHIP-8](https://en.wikipedia.org/wiki/CHIP-8) code. CHIP-8 is a minimal, interpreted language for creating simplistic games for 8-bit computers.
+This is an emulator for [CHIP-8](https://en.wikipedia.org/wiki/CHIP-8) code. CHIP-8 is a minimal, interpreted language for creating simplistic games for 8-bit computers.
 
 Though there are many other Chip-8 implementations in existence, this particular project is aimed at being extensible, and suitable for use in teaching environments.
 
